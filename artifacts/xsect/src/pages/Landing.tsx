@@ -27,26 +27,27 @@ export default function Landing() {
 
       <main className="flex-1 flex flex-col">
         {/* Hero Section */}
-        <section className="relative isolate w-full overflow-hidden border-b border-border">
-          <div className="absolute inset-0 -z-20" aria-hidden="true">
+        <section className="relative isolate w-full overflow-hidden border-b border-border bg-[#0b1018]">
+          <div className="absolute inset-x-0 top-0 h-[700px] md:h-[640px] lg:inset-0 lg:h-auto -z-20" aria-hidden="true">
             <img
               src={publicAsset('/images/xsect-crossing-hero.jpg')}
               alt=""
-              className="h-full w-full object-cover object-center brightness-[0.68] saturate-[1.04] contrast-[1.08]"
+              className="h-full w-full object-cover object-[62%_35%] md:object-[62%_70%] lg:object-[center_92%] brightness-[0.68] saturate-[1.04] contrast-[1.08]"
             />
+            <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-[#0b1018] lg:hidden" />
           </div>
-          <div className="px-6 md:px-12 py-20 md:py-32 max-w-[1400px] mx-auto w-full flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
+          <div className="px-6 md:px-12 py-14 md:py-20 lg:py-32 max-w-[1400px] mx-auto w-full flex flex-col lg:flex-row items-center gap-10 lg:gap-24">
           <div className="flex-1 w-full max-w-2xl reveal">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 mb-8" data-testid="badge-network-type">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 mb-6" data-testid="badge-network-type">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
               <span className="text-xs font-mono-custom font-bold uppercase tracking-widest text-white">Private Network</span>
             </div>
             
-            <h1 className="text-5xl md:text-7xl lg:text-[5rem] font-bold tracking-tight text-white mb-6 leading-[1.05] [text-shadow:0_3px_24px_rgba(0,0,0,0.85)]" data-testid="text-hero-title">
+            <h1 className="text-4xl md:text-6xl lg:text-[5rem] font-bold tracking-tight text-white mb-5 leading-[1.05] [text-shadow:0_3px_24px_rgba(0,0,0,0.85)]" data-testid="text-hero-title">
               Intersect with intent.
             </h1>
             
-            <p className="text-xl text-white/90 mb-10 leading-relaxed max-w-xl font-medium [text-shadow:0_2px_12px_rgba(0,0,0,0.95)]" data-testid="text-hero-subtitle">
+            <p className="text-lg md:text-xl text-white/90 mb-8 leading-relaxed max-w-xl font-medium [text-shadow:0_2px_12px_rgba(0,0,0,0.95)]" data-testid="text-hero-subtitle">
               Meet the right professionals when opportunity and timing align. XSECT connects people whose expertise, goals, and proximity complement one another—while keeping both identities private until there is mutual interest.
             </p>
             
