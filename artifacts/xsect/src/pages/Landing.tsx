@@ -47,7 +47,7 @@ export default function Landing() {
             </h1>
             
             <p className="text-xl text-white/90 mb-10 leading-relaxed max-w-xl font-medium [text-shadow:0_2px_12px_rgba(0,0,0,0.95)]" data-testid="text-hero-subtitle">
-              A high-signal routing layer for ambitious professionals. We match capability, timing, and geographic proximity without exposing your identity until mutual consent is established.
+              Meet the right people when timing matters. XSECT connects what you can do, what you need, and who is nearby—while keeping every identity private until both sides choose to connect.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4">
@@ -156,36 +156,70 @@ export default function Landing() {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-10 lg:gap-16">
-              <div className="bg-background border border-border p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow reveal-2" data-testid="feature-card-intent">
-                <div className="w-14 h-14 bg-secondary text-primary rounded-lg flex items-center justify-center mb-6 shadow-inner border border-border/50">
-                  <Workflow size={28} />
+            <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+              <article className="group bg-background border border-border rounded-2xl shadow-sm hover:shadow-xl transition-all overflow-hidden reveal-2" data-testid="feature-card-intent">
+                <div className="relative h-56 overflow-hidden">
+                  <img src={publicAsset('/images/revealed-1.jpg')} alt="Professionals meeting in a city" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+                  <div className="absolute left-5 right-5 bottom-5 flex items-center justify-between gap-3">
+                    <div className="px-3 py-2 rounded-lg bg-black/55 backdrop-blur-md border border-white/15 text-white">
+                      <p className="text-[10px] font-mono-custom uppercase tracking-wider text-white/65">Your signal</p>
+                      <p className="text-sm font-bold">Seeking a technical partner</p>
+                    </div>
+                    <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shrink-0">
+                      <Workflow size={19} />
+                    </div>
                 </div>
-                <h3 className="text-2xl font-bold text-foreground mb-4">Intent-Driven Routing</h3>
-                <p className="text-muted-foreground leading-relaxed font-medium text-base">
-                  Stop collecting passive connections. XSECT routes you only to individuals whose immediate timing and current capabilities align precisely with your active goals.
-                </p>
-              </div>
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-foreground mb-3">People who want the same next step</h3>
+                  <p className="text-muted-foreground leading-relaxed font-medium text-sm">
+                    See professionals whose skills, needs, and availability line up with what you are trying to do right now.
+                  </p>
+                </div>
+              </article>
               
-              <div className="bg-background border border-border p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow reveal-3" data-testid="feature-card-privacy">
-                <div className="w-14 h-14 bg-secondary text-primary rounded-lg flex items-center justify-center mb-6 shadow-inner border border-border/50">
-                  <Shield size={28} />
+              <article className="group bg-background border border-border rounded-2xl shadow-sm hover:shadow-xl transition-all overflow-hidden reveal-3" data-testid="feature-card-privacy">
+                <div className="relative h-56 overflow-hidden">
+                  <img src={publicAsset('/images/obscured-2.jpg')} alt="Protected professional identity" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent" />
+                  <div className="absolute inset-x-5 bottom-5 p-4 rounded-xl bg-black/55 backdrop-blur-md border border-white/15 text-white">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Shield size={16} className="text-primary" />
+                      <span className="text-[10px] font-mono-custom uppercase tracking-widest font-bold">Identity protected</span>
+                    </div>
+                    <p className="text-sm text-white/70">Name and company unlock only after mutual consent.</p>
                 </div>
-                <h3 className="text-2xl font-bold text-foreground mb-4">Zero-Knowledge Identity</h3>
-                <p className="text-muted-foreground leading-relaxed font-medium text-base">
-                  Appear strictly as a capability set and intent. Names, companies, and exact titles remain completely hidden behind cryptographic barriers until both parties explicitly consent.
-                </p>
-              </div>
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-foreground mb-3">Private until you both say yes</h3>
+                  <p className="text-muted-foreground leading-relaxed font-medium text-sm">
+                    Explore a person’s goals and strengths without exposing names, employers, or contact details before a mutual reveal.
+                  </p>
+                </div>
+              </article>
               
-              <div className="bg-background border border-border p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow reveal-4" data-testid="feature-card-proximity">
-                <div className="w-14 h-14 bg-secondary text-primary rounded-lg flex items-center justify-center mb-6 shadow-inner border border-border/50">
-                  <Map size={28} />
+              <article className="group bg-background border border-border rounded-2xl shadow-sm hover:shadow-xl transition-all overflow-hidden reveal-4" data-testid="feature-card-proximity">
+                <div className="relative h-56 overflow-hidden">
+                  <img src={publicAsset('/images/event-1.jpg')} alt="Professionals gathering at an evening event" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+                  <div className="absolute left-5 right-5 bottom-5 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shrink-0">
+                      <Map size={19} />
+                    </div>
+                    <div className="px-3 py-2 rounded-lg bg-black/55 backdrop-blur-md border border-white/15 text-white flex-1">
+                      <p className="text-[10px] font-mono-custom uppercase tracking-wider text-white/65">Approximate area</p>
+                      <p className="text-sm font-bold">7 relevant signals nearby</p>
+                    </div>
                 </div>
-                <h3 className="text-2xl font-bold text-foreground mb-4">Ephemeral Proximity</h3>
-                <p className="text-muted-foreground leading-relaxed font-medium text-base">
-                  Discover signals actively transmitting within your approximate area. We never store exact coordinates—only transient regional overlap while your app is actively open.
-                </p>
-              </div>
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-foreground mb-3">Useful proximity, not surveillance</h3>
+                  <p className="text-muted-foreground leading-relaxed font-medium text-sm">
+                    Find relevant people and gatherings in your approximate area while the app is open. Exact coordinates are never shown.
+                  </p>
+                </div>
+              </article>
             </div>
           </div>
         </section>
