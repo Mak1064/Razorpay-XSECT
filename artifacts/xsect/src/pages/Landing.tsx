@@ -36,17 +36,17 @@ export default function Landing() {
             />
           </div>
           <div className="px-6 md:px-12 py-20 md:py-32 max-w-[1400px] mx-auto w-full flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
-          <div className="flex-1 w-full max-w-2xl reveal bg-[#0b1018]/90 backdrop-blur-md border border-white/15 rounded-3xl p-7 md:p-10 lg:p-12 shadow-2xl">
+          <div className="flex-1 w-full max-w-2xl reveal">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 mb-8" data-testid="badge-network-type">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
               <span className="text-xs font-mono-custom font-bold uppercase tracking-widest text-white">Private Network</span>
             </div>
             
-            <h1 className="text-5xl md:text-7xl lg:text-[5rem] font-bold tracking-tight text-white mb-6 leading-[1.05]" data-testid="text-hero-title">
+            <h1 className="text-5xl md:text-7xl lg:text-[5rem] font-bold tracking-tight text-white mb-6 leading-[1.05] [text-shadow:0_3px_24px_rgba(0,0,0,0.85)]" data-testid="text-hero-title">
               Intersect with intent.
             </h1>
             
-            <p className="text-xl text-white/75 mb-10 leading-relaxed max-w-xl font-medium" data-testid="text-hero-subtitle">
+            <p className="text-xl text-white/90 mb-10 leading-relaxed max-w-xl font-medium [text-shadow:0_2px_12px_rgba(0,0,0,0.95)]" data-testid="text-hero-subtitle">
               A high-signal routing layer for ambitious professionals. We match capability, timing, and geographic proximity without exposing your identity until mutual consent is established.
             </p>
             
