@@ -23,3 +23,4 @@ export * from "./xsects";
 export * from "./network";
 export * from "./ai";
 export * from "./platform";
+export * from "./privacy";

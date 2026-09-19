@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useRef } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
@@ -30,6 +30,8 @@ import OrganizationDetail from './pages/OrganizationDetail';
 import Paths from './pages/Paths';
 import Alerts from './pages/Alerts';
 import Admin from './pages/Admin';
+import { PrivacyNotice, Terms } from './pages/Legal';
+import PrivacyCenter from './pages/PrivacyCenter';
 import { useProfile } from './hooks/use-profile';
 
 const queryClient = new QueryClient();
@@ -109,6 +111,25 @@ function SignUpPage() {
       <SignUp routing="path" path={`${basePath}/sign-up`} signInUrl={`${basePath}/sign-in`} />
     </div>
   );
+}
+
+function ConsentPrompt() {
+  const { isSignedIn } = useUser();
+  const [open, setOpen] = useState(false);
+  const [consent, setConsent] = useState({ terms: false, privacy: false, age18: false });
+  useEffect(() => {
+    if (!isSignedIn) return;
+    fetch('/api/privacy/consents', { credentials: 'include' }).then(r => r.ok ? r.json() : null).then(data => {
+      if (!data || !data.terms || !data.privacy || !data.age18) setOpen(true);
+    }).catch(() => undefined);
+  }, [isSignedIn]);
+  if (!open) return null;
+  const save = async () => {
+    if (!consent.terms || !consent.privacy || !consent.age18) return;
+    const r = await fetch('/api/privacy/consents', { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...consent, location: false, analytics: false, aiProfiling: false, marketing: false }) });
+    if (r.ok) setOpen(false);
+  };
+  return <div className="fixed inset-0 z-[100] grid place-items-center bg-black/50 p-4"><div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl"><h2 className="text-xl font-bold">Before you continue</h2><p className="mt-2 text-sm text-muted-foreground">XSECT is for people aged 18+. Please review and accept our required terms. Optional processing stays off unless you enable it in Privacy Center.</p>{(['terms','privacy','age18'] as const).map(k => <label key={k} className="mt-4 flex gap-3 text-sm"><input type="checkbox" checked={consent[k]} onChange={() => setConsent({ ...consent, [k]: !consent[k] })} />{k === 'terms' ? <span>I agree to the <a className="text-primary" href="/terms">Terms of Service</a>.</span> : k === 'privacy' ? <span>I acknowledge the <a className="text-primary" href="/privacy">Privacy Notice</a>.</span> : 'I confirm I am 18 or older.'}</label>)}<button onClick={save} disabled={!consent.terms || !consent.privacy || !consent.age18} className="mt-6 w-full rounded-md bg-primary px-4 py-3 font-semibold text-white disabled:opacity-40">Continue</button><a href="/privacy-center" className="mt-3 block text-center text-sm text-primary">Manage optional choices</a></div></div>;
 }
 
 function ClerkQueryClientCacheInvalidator() {
@@ -195,6 +216,9 @@ function AppRoutes() {
       
       <Route path="/sign-in/*?" component={SignInPage} />
       <Route path="/sign-up/*?" component={SignUpPage} />
+      <Route path="/privacy" component={PrivacyNotice} />
+      <Route path="/terms" component={Terms} />
+      <Route path="/privacy-center" component={PrivacyCenter} />
 
       {/* Protected Routes Wrapper */}
       <Route path="/:rest*">
@@ -271,6 +295,7 @@ function ClerkProviderWithRoutes() {
             <RoutedErrorBoundary>
               <div className="min-h-[100dvh] w-full text-foreground bg-background font-sans selection:bg-primary/20 selection:text-primary">
                 <AppRoutes />
+                <ConsentPrompt />
               </div>
             </RoutedErrorBoundary>
           </StoreProvider>

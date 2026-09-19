@@ -9,6 +9,7 @@ import opportunitiesRouter from "./opportunities";
 import networkRouter from "./network";
 import aiRouter from "./ai";
 import adminRouter from "./admin";
+import privacyRouter from "./privacy";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(opportunitiesRouter);
 router.use(networkRouter);
 router.use(aiRouter);
 router.use(adminRouter);
+router.use(privacyRouter);
 
 export default router;

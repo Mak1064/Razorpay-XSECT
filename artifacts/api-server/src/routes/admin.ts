@@ -32,6 +32,12 @@ router.get("/admin/me", async (req, res, next) => {
 
 router.post("/admin/bootstrap", async (req, res, next) => {
   try {
+    const configuredAdmins = (process.env.ADMIN_USER_IDS ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+    const token = req.get("x-admin-bootstrap-token");
+    const tokenAccepted = Boolean(process.env.ADMIN_BOOTSTRAP_TOKEN && token && token === process.env.ADMIN_BOOTSTRAP_TOKEN);
+    if (process.env.NODE_ENV === "production" && !tokenAccepted && !configuredAdmins.includes(actor(req))) {
+      return bad(res, "Production bootstrap requires ADMIN_BOOTSTRAP_TOKEN or a configured ADMIN_USER_IDS entry.", 403);
+    }
     const admin = await db.transaction(async (tx) => {
       await tx.execute(sql`select pg_advisory_xact_lock(934721)`);
       const existing = await tx.select({ userId: adminUsersTable.userId }).from(adminUsersTable).limit(1);

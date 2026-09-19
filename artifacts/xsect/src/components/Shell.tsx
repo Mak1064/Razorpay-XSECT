@@ -128,6 +128,11 @@ export default function Shell({ children }: { children: ReactNode }) {
               <span className="text-[10px] text-muted-foreground font-mono-custom font-semibold uppercase">{isPremium ? state.plan : 'Protected'}</span>
             </div>
           </Link>
+          <div className="mt-3 flex gap-3 px-3 text-[11px] text-muted-foreground">
+            <Link href="/privacy-center" className="hover:text-foreground">Privacy Center</Link>
+            <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
+            <Link href="/terms" className="hover:text-foreground">Terms</Link>
+          </div>
         </div>
       </aside>
 

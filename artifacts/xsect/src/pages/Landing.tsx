@@ -264,8 +264,9 @@ export default function Landing() {
           <span className="text-sm font-bold text-foreground">XSECT Inc. © {new Date().getFullYear()}</span>
         </div>
         <div className="flex gap-8 text-sm font-semibold text-muted-foreground">
-          <a href="#" className="hover:text-foreground transition-colors" data-testid="link-footer-privacy">Privacy Protocol</a>
-          <a href="#" className="hover:text-foreground transition-colors" data-testid="link-footer-terms">Terms of Service</a>
+          <Link href="/privacy" className="hover:text-foreground transition-colors" data-testid="link-footer-privacy">Privacy Notice</Link>
+          <Link href="/terms" className="hover:text-foreground transition-colors" data-testid="link-footer-terms">Terms of Service</Link>
+          <Link href="/privacy-center" className="hover:text-foreground transition-colors">Privacy Center</Link>
           <a href="#" className="hover:text-foreground transition-colors" data-testid="link-footer-contact">Contact</a>
         </div>
       </footer>
