@@ -1,0 +1,93 @@
+Skip to content
+Personal settings
+Personal details
+Contact information, password, authentication methods, and your active sessions.
+
+Communication preferences
+Customize the emails, SMS, and push notifications you receive.
+
+Developers
+API policies, Workbench, and more
+
+Account settings
+Business
+Account details, account health, public info, legal entity, custom domains, and more.
+
+Linked accounts and payouts
+Bank accounts, debit cards, transfer rules, and settlement currencies.
+
+Team and security
+Team members, roles, account security, authorized apps, and shared resources.
+
+Plans and fees
+Cost management for your Stripe products and services.
+
+Stripe profile
+Manage how you show up to other businesses.
+
+Compliance and documents
+PCI compliance, documents, and legacy exports.
+
+Account features and previews
+Manage your account features and product previews.
+
+Perks
+Discounts on tools to run your startup.
+
+Product settings
+Billing
+Subscriptions, invoices, quotes, and customer portal.
+
+Financial Connections
+Appearance, featured institutions, optimizations, and usage details.
+
+Managed Payments
+Stripe's merchant of record handles global tax, fraud, and disputes.
+
+Payments
+Checkout, payment methods, currency conversion, and more.
+
+Radar
+Manage fraud protection and customization capabilities for your account.
+
+Tax
+Head office address, preset tax code, default tax behavior, and tax integrations.
+
+Discover more features
+Boost revenue, manage finances, and more.
+
+Share feedback
+·
+Keyboard shortcuts
+Navigated to Settings – XSECT Opportunity Network Sandbox – Stripe [Test]
+Sandbox
+You're testing in a sandbox. Changes you make here don't affect real customers or payments.
+Switch to live account
+
+XSECT Opportunity Network Sandbox
+XSECT Opportunity Network Sandbox
+Home
+Balances
+Shortcuts
+Projects
+Products
+Payments
+Billing
+Apps
+More
+Link
+Profiles
+Tax
+Connect
+Identity
+Atlas
+Issuing
+Financial Connections
+Capital
+Climate
+Workflows
+Projects
+Global Payouts
+Search
+Setup guide
+Developers
