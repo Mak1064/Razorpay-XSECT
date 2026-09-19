@@ -1,10 +1,11 @@
 import { ReactNode, useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useStore } from '../store';
+import { useActivity } from '../lib/activity';
 import { useUser } from '@clerk/react';
 import { 
   Radar, Compass, Layers3, Network, Bot, Calendar, MessageSquare, 
-  Menu, X, Bell 
+  Menu, X, Bell, CheckCheck
 } from 'lucide-react';
 
 const navItems = [
@@ -20,12 +21,62 @@ const navItems = [
 export default function Shell({ children }: { children: ReactNode }) {
   const [location] = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const { state } = useStore();
   const { user } = useUser();
+  const activity = useActivity(user?.id);
 
   const profileName = state.profile?.name || user?.fullName || 'User';
   const initial = profileName.charAt(0);
   const isPremium = state.plan !== 'free';
+  const unreadNotifications = activity.snapshot.notifications.filter((notification) => !notification.read).length;
+  const notificationBell = (
+    <div className="relative pointer-events-auto">
+      <button
+        onClick={() => setNotificationsOpen((open) => !open)}
+        aria-label={`Notifications${unreadNotifications ? `, ${unreadNotifications} unread` : ''}`}
+        aria-expanded={notificationsOpen}
+        className="relative bg-white border border-border rounded-full p-2 text-muted-foreground hover:text-foreground shadow-sm transition-colors"
+      >
+        <Bell size={18} />
+        {unreadNotifications > 0 && <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-primary text-white text-[9px] flex items-center justify-center font-bold">{unreadNotifications}</span>}
+      </button>
+      {notificationsOpen && (
+        <div className="fixed md:absolute top-16 md:top-12 left-3 right-3 md:left-auto md:right-0 md:w-96 bg-white border border-border rounded-2xl shadow-2xl overflow-hidden z-[70]">
+          <div className="p-4 border-b border-border flex items-center justify-between">
+            <div>
+              <p className="font-bold">Notifications</p>
+              <p className="text-xs text-muted-foreground">{unreadNotifications ? `${unreadNotifications} unread` : 'You are all caught up'}</p>
+            </div>
+            {unreadNotifications > 0 && (
+              <button onClick={() => activity.markAllNotificationsRead()} className="text-xs font-bold text-primary flex items-center gap-1"><CheckCheck size={14} /> Mark all read</button>
+            )}
+          </div>
+          <div className="max-h-[420px] overflow-y-auto">
+            {activity.snapshot.notifications.length === 0 ? (
+              <p className="p-8 text-sm text-muted-foreground text-center">No notifications yet.</p>
+            ) : activity.snapshot.notifications.map((notification) => (
+              <Link
+                key={notification.id}
+                href={notification.href ?? '/radar'}
+                onClick={() => { activity.markNotificationRead(notification.id); setNotificationsOpen(false); }}
+                className={`block p-4 border-b border-border last:border-0 hover:bg-secondary/60 transition-colors ${notification.read ? 'bg-white' : 'bg-primary/[0.04]'}`}
+              >
+                <div className="flex gap-3">
+                  <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${notification.read ? 'bg-border' : 'bg-primary'}`} />
+                  <div>
+                    <p className="text-sm font-bold text-foreground">{notification.title}</p>
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{notification.description}</p>
+                    <p className="text-[10px] font-mono-custom text-muted-foreground mt-2">{notification.createdAt}</p>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="min-h-[100dvh] bg-background text-foreground flex flex-col md:flex-row">
@@ -79,7 +130,7 @@ export default function Shell({ children }: { children: ReactNode }) {
           XSECT
         </Link>
         <div className="flex items-center gap-4">
-          <button className="text-muted-foreground hover:text-foreground"><Bell size={20} /></button>
+          {notificationBell}
           <button onClick={() => setMenuOpen(true)} className="text-foreground"><Menu size={24} /></button>
         </div>
       </header>
@@ -112,9 +163,7 @@ export default function Shell({ children }: { children: ReactNode }) {
               Upgrade
             </Link>
           )}
-          <div className="pointer-events-auto bg-white border border-border rounded-full p-2 text-muted-foreground hover:text-foreground cursor-pointer shadow-sm transition-colors">
-            <Bell size={18} />
-          </div>
+          {notificationBell}
         </div>
         <div className="flex-1">
           {children}

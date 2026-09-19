@@ -1,6 +1,8 @@
 import { Link } from 'wouter';
 import { Map, Shield, Workflow, Lock, ArrowRight, Activity, Crosshair } from 'lucide-react';
 
+const publicAsset = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/^\//, '')}`;
+
 export default function Landing() {
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background selection:bg-primary/20" data-testid="page-landing">
@@ -28,13 +30,13 @@ export default function Landing() {
         <section className="relative isolate w-full overflow-hidden border-b border-border">
           <div className="absolute inset-0 -z-20" aria-hidden="true">
             <img
-              src="/images/city-1.jpg"
+              src={publicAsset('/images/city-1.jpg')}
               alt=""
-              className="h-full w-full object-cover object-center opacity-30 saturate-[0.8]"
+              className="h-full w-full object-cover object-center opacity-75 saturate-[0.9] contrast-[1.05]"
             />
           </div>
           <div
-            className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(255,255,255,0.98)_0%,rgba(255,255,255,0.94)_42%,rgba(255,255,255,0.70)_72%,rgba(255,255,255,0.82)_100%)] lg:bg-[linear-gradient(90deg,rgba(255,255,255,0.98)_0%,rgba(255,255,255,0.94)_38%,rgba(255,255,255,0.40)_72%,rgba(255,255,255,0.62)_100%)]"
+            className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.93)_0%,rgba(255,255,255,0.78)_52%,rgba(255,255,255,0.48)_100%)] lg:bg-[linear-gradient(90deg,rgba(255,255,255,0.97)_0%,rgba(255,255,255,0.92)_40%,rgba(255,255,255,0.24)_73%,rgba(255,255,255,0.38)_100%)]"
             aria-hidden="true"
           />
           <div className="px-6 md:px-12 py-20 md:py-32 max-w-[1400px] mx-auto w-full flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
@@ -79,11 +81,11 @@ export default function Landing() {
               {/* Background Plate */}
               <div className="absolute inset-0">
                 <img 
-                  src="/images/landing-hero.jpg" 
+                  src={publicAsset('/images/landing-hero.jpg')}
                   alt="Abstract intersection" 
-                  className="w-full h-full object-cover opacity-80 mix-blend-screen" 
+                  className="w-full h-full object-cover opacity-95" 
                 />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/60 to-black/90"></div>
+                <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-black/45 to-black/85"></div>
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.8)_100%)]"></div>
               </div>
               
