@@ -1,174 +1,92 @@
-import { useState, type ReactNode } from 'react';
-import { Link, Route, Switch, useLocation } from 'wouter';
-import {
-  Activity, ArrowDownRight, ArrowUpRight, Bell, Bot, ChevronRight,
-  CircleHelp, Compass, Crosshair, Database, EyeOff, Filter,
-  Layers3, Lightbulb, MapPin, Menu, Network, Radar, Search,
-  Settings2, ShieldCheck, Sparkles, Target, Users, X, Zap
-} from 'lucide-react';
+import { type ReactNode } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ErrorBoundary } from '@/components/error-boundary';
+import { Toaster } from '@/components/ui/toaster';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import NotFound from '@/pages/not-found';
+import { Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
 
-type Icon = typeof Radar;
+import { StoreProvider, useStore } from './store';
 
-const navItems: { href: string; label: string; icon: Icon; badge?: string }[] = [
-  { href: '/', label: 'Radar', icon: Radar },
-  { href: '/discover', label: 'Discover', icon: Compass, badge: '12' },
-  { href: '/xsects', label: 'XSECTs', icon: Layers3 },
-  { href: '/network', label: 'Network', icon: Network },
-  { href: '/ai', label: 'Intelligence', icon: Bot },
-];
+// Components
+import Shell from './components/Shell';
 
-const opportunities = [
-  { id: '284', title: 'Operator / builder for a climate systems studio', type: 'Opportunity', score: 92, area: 'Mission District · 1.8 mi', timing: 'Active this week', why: ['Your climate thesis', 'Early-stage operator signal', 'Shared path via 2 trusted nodes'], color: 'mint' },
-  { id: '731', title: 'Product signal for the next chapter of public space', type: 'XSECT', score: 86, area: 'SoMa · 2.4 mi', timing: 'Timing aligned', why: ['Urban systems + product', 'Complementary intent', 'Introduced by 1 trusted node'], color: 'amber' },
-  { id: '109', title: 'Quietly assembling a research collective', type: 'XSECT', score: 78, area: 'Dogpatch · 3.1 mi', timing: 'Open for 10 days', why: ['Research practice overlap', 'Mutual curiosity signal', 'Place rhythm aligned'], color: 'violet' },
-];
+// Pages
+import Landing from './pages/Landing';
+import Onboarding from './pages/Onboarding';
+import Radar from './pages/Radar';
+import Discover from './pages/Discover';
+import XSECTs from './pages/XSECTs';
+import NetworkPage from './pages/Network';
+import Intelligence from './pages/Intelligence';
+import EventsPage from './pages/Events';
+import MessagesPage from './pages/Messages';
+import Profile from './pages/Profile';
 
-function Logo({ compact = false }: { compact?: boolean }) {
-  return <Link href="/" className={`flex items-center gap-3 ${compact ? 'justify-center' : ''}`} data-testid="link-logo">
-    <span className="relative grid h-8 w-8 place-items-center rounded-[10px] border border-[#81e6d0]/40 bg-[#81e6d0]/10">
-      <span className="absolute h-4 w-4 rotate-45 border border-[#81e6d0]"></span>
-      <span className="h-1.5 w-1.5 rounded-full bg-[#e4bf78]"></span>
-    </span>
-    {!compact && <span className="font-display text-[15px] font-semibold tracking-[.2em] text-[#f2efe7]">XSECT</span>}
-  </Link>;
+const queryClient = new QueryClient();
+
+function AppRoutes() {
+  const { state } = useStore();
+  
+  if (!state.isLoggedIn) {
+    return (
+      <Switch>
+        <Route path="/" component={Landing} />
+        <Route path="/onboarding" component={Onboarding} />
+        <Route>
+          <Landing />
+        </Route>
+      </Switch>
+    );
+  }
+  
+  if (!state.onboardingComplete) {
+    return (
+      <Switch>
+        <Route component={Onboarding} />
+      </Switch>
+    );
+  }
+
+  return (
+    <Shell>
+      <Switch>
+        <Route path="/" component={Radar} />
+        <Route path="/discover" component={Discover} />
+        <Route path="/xsects" component={XSECTs} />
+        <Route path="/network" component={NetworkPage} />
+        <Route path="/ai" component={Intelligence} />
+        <Route path="/events" component={EventsPage} />
+        <Route path="/messages" component={MessagesPage} />
+        <Route path="/profile" component={Profile} />
+        <Route component={NotFound} />
+      </Switch>
+    </Shell>
+  );
 }
 
-function Shell({ children }: { children: ReactNode }) {
+function RoutedErrorBoundary({ children }: { children: ReactNode }) {
   const [location] = useLocation();
-  const [menuOpen, setMenuOpen] = useState(false);
-  return <div className="min-h-[100dvh] bg-[#080b10] text-[#f2efe7]">
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-[238px] border-r border-white/[.07] bg-[#0b0f15] px-5 py-6 lg:flex lg:flex-col">
-      <Logo />
-      <div className="mt-12 flex items-center gap-2 rounded-full border border-[#7ee7d0]/20 bg-[#7ee7d0]/[.06] px-3 py-2">
-        <span className="h-2 w-2 rounded-full bg-[#7ee7d0] shadow-[0_0_12px_#7ee7d0]"></span>
-        <span className="font-mono-custom text-[10px] uppercase tracking-[.15em] text-[#9fe8d7]">Live signal · SF Bay</span>
-      </div>
-      <nav className="mt-8 space-y-1" aria-label="Primary navigation">
-        {navItems.map((item) => <NavItem key={item.href} item={item} active={location === item.href} />)}
-      </nav>
-      <div className="mt-auto space-y-1">
-        <Link href="/profile" className={`flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition ${location === '/profile' ? 'bg-white/[.09] text-white' : 'text-[#87909c] hover:bg-white/[.04] hover:text-white'}`} data-testid="link-profile">
-          <Users size={17} /><span>Profile</span>
-        </Link>
-        <button className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm text-[#87909c] transition hover:bg-white/[.04] hover:text-white" data-testid="button-settings">
-          <Settings2 size={17} /><span>Settings</span>
-        </button>
-      </div>
-      <div className="mt-5 rounded-xl border border-white/[.08] bg-[#11161f] p-3">
-        <div className="flex items-center justify-between"><span className="font-mono-custom text-[9px] uppercase tracking-[.14em] text-[#6e7784]">Privacy mode</span><ShieldCheck size={13} className="text-[#7ee7d0]" /></div>
-        <p className="mt-2 text-[11px] leading-relaxed text-[#a5adb8]">Identity and exact location stay protected until mutual consent.</p>
-      </div>
-    </aside>
-    <header className="sticky top-0 z-20 flex h-[68px] items-center justify-between border-b border-white/[.07] bg-[#080b10]/80 px-5 backdrop-blur-xl lg:ml-[238px] lg:px-9">
-      <div className="flex items-center gap-3 lg:hidden"><button onClick={() => setMenuOpen(!menuOpen)} className="text-[#a8b0ba]" aria-label="Open menu" data-testid="button-open-menu"><Menu size={21} /></button><Logo /></div>
-      <div className="hidden items-center gap-2 text-[11px] text-[#76808c] lg:flex"><span className="font-mono-custom uppercase tracking-[.12em]">{location === '/' ? 'Radar' : location.slice(1)}</span><ChevronRight size={13} /><span className="text-[#b9c0c8]">San Francisco, CA</span></div>
-      <div className="ml-auto flex items-center gap-3">
-        <button className="relative rounded-full border border-white/[.09] p-2 text-[#98a1ad] transition hover:border-[#7ee7d0]/40 hover:text-[#7ee7d0]" aria-label="Notifications" data-testid="button-notifications"><Bell size={16} /><span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-[#e4bf78]"></span></button>
-        <Link href="/profile" className="flex items-center gap-2 rounded-full border border-white/[.1] bg-white/[.04] py-1 pl-1 pr-3 transition hover:bg-white/[.08]" data-testid="link-avatar-profile">
-          <span className="grid h-7 w-7 place-items-center rounded-full bg-[#c6d2bc] text-[10px] font-bold text-[#172019]">AM</span><span className="hidden text-xs text-[#bfc6ce] sm:block">Alex Morgan</span>
-        </Link>
-      </div>
-    </header>
-    {menuOpen && <div className="fixed inset-0 z-40 bg-[#080b10]/95 p-6 lg:hidden"><div className="flex items-center justify-between"><Logo /><button onClick={() => setMenuOpen(false)} aria-label="Close menu" data-testid="button-close-menu"><X /></button></div><nav className="mt-12 space-y-2">{navItems.map(item => <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)} className="flex items-center gap-4 rounded-xl px-4 py-4 text-lg text-[#bac2cc]" data-testid={`mobile-link-${item.label.toLowerCase()}`}><item.icon size={20} />{item.label}</Link>)}</nav></div>}
-    <main className="pb-24 lg:ml-[238px] lg:pb-10">{children}</main>
-    <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-white/[.08] bg-[#0a0e14]/95 px-2 py-2 backdrop-blur-xl lg:hidden">{[...navItems, { href: '/profile', label: 'Profile', icon: Users }].slice(0, 5).map((item) => <Link key={item.href} href={item.href} className={`flex flex-col items-center gap-1 py-1 text-[9px] ${location === item.href ? 'text-[#7ee7d0]' : 'text-[#69737f]'}`} data-testid={`bottom-link-${item.label.toLowerCase()}`}><item.icon size={18} /><span>{item.label}</span></Link>)}</nav>
-  </div>;
+  return <ErrorBoundary resetKey={location}>{children}</ErrorBoundary>;
 }
 
-function NavItem({ item, active }: { item: typeof navItems[number]; active: boolean }) {
-  return <Link href={item.href} className={`group flex items-center justify-between rounded-lg px-3 py-3 text-sm transition ${active ? 'bg-[#7ee7d0]/10 text-[#d3f8ee]' : 'text-[#87909c] hover:bg-white/[.04] hover:text-[#e8ebe8]'}`} data-testid={`nav-${item.label.toLowerCase()}`}>
-    <span className="flex items-center gap-3"><item.icon size={17} strokeWidth={active ? 2 : 1.7} /><span>{item.label}</span></span>{item.badge && <span className="rounded-full bg-[#e4bf78]/15 px-2 py-0.5 font-mono-custom text-[9px] text-[#e4bf78]">{item.badge}</span>}
-  </Link>;
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <StoreProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+            <RoutedErrorBoundary>
+              <div className="dark min-h-[100dvh] w-full text-foreground bg-background font-sans selection:bg-primary selection:text-primary-foreground">
+                <AppRoutes />
+              </div>
+            </RoutedErrorBoundary>
+          </WouterRouter>
+        </StoreProvider>
+        <Toaster />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
 }
 
-function Eyebrow({ children }: { children: ReactNode }) {
-  return <div className="flex items-center gap-2 font-mono-custom text-[10px] uppercase tracking-[.18em] text-[#7ee7d0]"><span className="h-1 w-1 rounded-full bg-[#e4bf78]"></span>{children}</div>;
-}
-function PageHeader({ eyebrow, title, sub, action }: { eyebrow: string; title: string; sub: string; action?: React.ReactNode }) {
-  return <div className="flex flex-col justify-between gap-5 border-b border-white/[.07] px-5 py-8 sm:px-9 sm:py-10 lg:flex-row lg:items-end"><div><Eyebrow>{eyebrow}</Eyebrow><h1 className="mt-3 font-display text-3xl font-semibold tracking-[-.04em] text-[#f4f1ea] sm:text-4xl">{title}</h1><p className="mt-2 max-w-xl text-sm leading-relaxed text-[#8e98a5]">{sub}</p></div>{action}</div>;
-}
-function Pill({ children, tone = 'neutral' }: { children: ReactNode; tone?: 'neutral' | 'mint' | 'amber' }) {
-  return <span className={`inline-flex items-center rounded-full border px-2.5 py-1 font-mono-custom text-[9px] uppercase tracking-[.08em] ${tone === 'mint' ? 'border-[#7ee7d0]/25 bg-[#7ee7d0]/[.07] text-[#9fe8d7]' : tone === 'amber' ? 'border-[#e4bf78]/25 bg-[#e4bf78]/[.07] text-[#e4bf78]' : 'border-white/[.1] bg-white/[.035] text-[#929ca8]'}`}>{children}</span>;
-}
-function Button({ children, onClick, variant = 'primary', icon: IconComp, testId }: { children: ReactNode; onClick?: () => void; variant?: 'primary' | 'ghost'; icon?: Icon; testId: string }) {
-  return <button onClick={onClick} className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-xs font-semibold transition active:scale-[.98] ${variant === 'primary' ? 'bg-[#7ee7d0] text-[#0c1716] hover:bg-[#a5f4e2]' : 'border border-white/[.12] bg-white/[.035] text-[#d8dedf] hover:border-[#7ee7d0]/35 hover:bg-white/[.07]'}`} data-testid={testId}>{children}{IconComp && <IconComp size={14} />}</button>;
-}
-function Toast({ text, onClose }: { text: string; onClose: () => void }) {
-  return <div className="fixed bottom-20 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-xl border border-[#7ee7d0]/30 bg-[#121d1d] px-4 py-3 text-xs text-[#d4f8ef] shadow-2xl lg:bottom-8"><ShieldCheck size={15} className="text-[#7ee7d0]" />{text}<button onClick={onClose} className="ml-3 text-[#71817e]" aria-label="Close notification" data-testid="button-close-toast"><X size={13} /></button></div>;
-}
-
-function Score({ value, large = false }: { value: number; large?: boolean }) {
-  const r = large ? 40 : 24; const c = 2 * Math.PI * r; const dash = c * value / 100;
-  return <div className={`relative shrink-0 ${large ? 'h-[104px] w-[104px]' : 'h-[66px] w-[66px]'}`} data-testid={`score-${value}`}><svg className="h-full w-full -rotate-90" viewBox="0 0 100 100"><circle cx="50" cy="50" r={r} fill="none" stroke="rgba(255,255,255,.08)" strokeWidth={large ? 3 : 4} /><circle cx="50" cy="50" r={r} fill="none" stroke="#7ee7d0" strokeWidth={large ? 3 : 4} strokeLinecap="round" strokeDasharray={`${dash} ${c}`} /></svg><div className="absolute inset-0 grid place-items-center"><span className={`font-display font-semibold text-[#e3f9f3] ${large ? 'text-2xl' : 'text-sm'}`}>{value}</span></div></div>;
-}
-
-function RadarVisual() {
-  const points = [{ x: '23%', y: '29%', label: '92' }, { x: '70%', y: '22%', label: '86' }, { x: '64%', y: '67%', label: '78' }, { x: '31%', y: '72%', label: '74' }, { x: '50%', y: '44%', label: '84' }];
-  return <div className="relative aspect-square w-full overflow-hidden rounded-2xl border border-white/[.09] bg-[#0d1418] sm:aspect-[1.25/1]">
-    <div className="absolute inset-0 opacity-60" style={{ backgroundImage: 'linear-gradient(rgba(126,231,208,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(126,231,208,.05) 1px, transparent 1px)', backgroundSize: '44px 44px' }}></div>
-    <div className="absolute left-1/2 top-1/2 h-[68%] w-[68%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#7ee7d0]/20"></div><div className="absolute left-1/2 top-1/2 h-[43%] w-[43%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#7ee7d0]/20"></div><div className="absolute left-1/2 top-1/2 h-[19%] w-[19%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#7ee7d0]/30"></div>
-    <div className="radar-sweep absolute left-1/2 top-1/2 h-1/2 w-1/2 origin-top-left border-l border-t border-[#7ee7d0]/40" style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }}></div>
-    <div className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#e4bf78] shadow-[0_0_22px_#e4bf78]"></div>
-    {points.map((p, i) => <div key={p.label} className={`absolute -translate-x-1/2 -translate-y-1/2 ${i === 0 ? 'radar-pulse' : ''}`} style={{ left: p.x, top: p.y }}><span className={`grid h-8 w-8 place-items-center rounded-full border ${i === 0 ? 'border-[#7ee7d0] bg-[#7ee7d0]/20' : 'border-[#e4bf78]/60 bg-[#e4bf78]/10'} font-mono-custom text-[10px] text-[#eaf5ef]`}>{p.label}</span></div>)}
-    <div className="absolute bottom-4 left-4 flex items-center gap-2 rounded-lg border border-white/[.09] bg-[#0a1013]/75 px-3 py-2 backdrop-blur"><MapPin size={13} className="text-[#e4bf78]" /><span className="font-mono-custom text-[10px] text-[#b8c2c1]">your approximate area</span></div>
-    <div className="absolute right-4 top-4 flex items-center gap-2 font-mono-custom text-[9px] uppercase tracking-[.12em] text-[#6f8985]"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#7ee7d0]"></span>scanning now</div>
-  </div>;
-}
-
-function OpportunityCard({ item, onRequest }: { item: typeof opportunities[number]; onRequest: (id: string) => void }) {
-  return <article className="group rounded-2xl border border-white/[.09] bg-[#10151c] p-5 transition duration-300 hover:-translate-y-0.5 hover:border-[#7ee7d0]/30 hover:bg-[#121a20]" data-testid={`card-opportunity-${item.id}`}>
-    <div className="flex items-start justify-between gap-4"><div className="flex gap-2"><Pill tone={item.color === 'amber' ? 'amber' : 'mint'}>{item.type}</Pill><Pill>{item.timing}</Pill></div><Score value={item.score} /></div>
-    <h3 className="mt-5 max-w-sm font-display text-lg font-medium leading-snug text-[#edece5]">{item.title}</h3>
-    <div className="mt-3 flex items-center gap-2 text-xs text-[#8c969f]"><EyeOff size={13} className="text-[#71807f]" />Protected Professional #{item.id}<span className="mx-1 text-[#45505a]">·</span><MapPin size={13} />{item.area}</div>
-    <div className="mt-5 border-t border-white/[.07] pt-4"><div className="mb-3 flex items-center gap-2 text-[10px] uppercase tracking-[.14em] text-[#717d88]"><Crosshair size={12} className="text-[#7ee7d0]" />Why this surfaced</div><div className="flex flex-wrap gap-2">{item.why.map(reason => <span key={reason} className="rounded-md bg-white/[.04] px-2 py-1 text-[10px] text-[#aeb7bd]">{reason}</span>)}</div></div>
-    <Button onClick={() => onRequest(item.id)} variant="ghost" icon={ArrowUpRight} testId={`button-request-${item.id}`}>Request a connection</Button>
-  </article>;
-}
-
-function Home() {
-  const [toast, setToast] = useState(''); const [range, setRange] = useState('2–5 mi'); const [active, setActive] = useState('All signals');
-  return <Shell><div className="px-5 py-8 sm:px-9 sm:py-10"><div className="reveal flex flex-col justify-between gap-6 xl:flex-row xl:items-end"><div><Eyebrow>Radar / 08:42 local</Eyebrow><h1 className="mt-4 max-w-3xl font-display text-4xl font-semibold leading-[1.03] tracking-[-.055em] text-[#f4f1ea] sm:text-6xl">The right paths are<br /><span className="text-[#7ee7d0]">already converging.</span></h1><p className="mt-5 max-w-xl text-sm leading-relaxed text-[#8e98a5]">XSECT is scanning for meaningful intersections between your intent, your skills, timing, and the people around you.</p></div><div className="flex items-center gap-3"><Pill tone="mint">14 live signals</Pill><span className="font-mono-custom text-[10px] text-[#66717d]">updated 2m ago</span></div></div>
-    <div className="reveal reveal-1 mt-10 grid gap-5 xl:grid-cols-[1.12fr_.88fr]"><RadarVisual /><div className="flex flex-col gap-5"><div className="rounded-2xl border border-[#e4bf78]/25 bg-[#151512] p-6"><div className="flex items-start justify-between"><div><Eyebrow>Today's signal</Eyebrow><h2 className="mt-3 font-display text-2xl tracking-[-.03em]">A window is opening<br />in climate systems.</h2></div><Sparkles size={20} className="text-[#e4bf78]" /></div><p className="mt-4 text-sm leading-relaxed text-[#9e9c91]">Two nearby intent signals overlap with your work in operating early-stage climate teams.</p><div className="mt-5 flex items-end justify-between"><div><span className="font-mono-custom text-3xl text-[#e4bf78]">+31%</span><p className="mt-1 text-[10px] uppercase tracking-[.12em] text-[#716e62]">signal strength this week</p></div><Link href="/discover" className="text-xs font-semibold text-[#e4bf78] underline decoration-[#e4bf78]/30 underline-offset-4" data-testid="link-view-signals">View signals <ArrowUpRight className="ml-1 inline" size={13} /></Link></div></div><div className="grid grid-cols-2 gap-5"><div className="rounded-2xl border border-white/[.08] bg-[#10151c] p-5"><div className="flex items-center justify-between"><span className="text-xs text-[#89949e]">XSECT Score</span><Target size={15} className="text-[#7ee7d0]" /></div><div className="mt-4 flex items-end gap-2"><span className="font-display text-3xl">84</span><span className="mb-1 font-mono-custom text-[10px] text-[#7ee7d0]">+6 this month</span></div><div className="mt-3 h-1 rounded-full bg-white/[.08]"><div className="h-1 w-[84%] rounded-full bg-[#7ee7d0]"></div></div></div><div className="rounded-2xl border border-white/[.08] bg-[#10151c] p-5"><div className="flex items-center justify-between"><span className="text-xs text-[#89949e]">Path density</span><Network size={15} className="text-[#e4bf78]" /></div><div className="mt-4 flex items-end gap-2"><span className="font-display text-3xl">High</span></div><p className="mt-3 text-[10px] leading-relaxed text-[#78838d]">More trusted nodes are active near your orbit.</p></div></div></div></div>
-    <div className="reveal reveal-2 mt-12"><div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"><div><Eyebrow>Closest intersections</Eyebrow><h2 className="mt-2 font-display text-2xl tracking-[-.03em]">Worth a closer look</h2></div><div className="flex gap-2 overflow-x-auto"><button onClick={() => setActive('All signals')} className={`whitespace-nowrap rounded-lg border px-3 py-2 text-[10px] ${active === 'All signals' ? 'border-[#7ee7d0]/40 bg-[#7ee7d0]/10 text-[#9fe8d7]' : 'border-white/[.1] text-[#828d97]'}`} data-testid="filter-all">All signals</button><button onClick={() => setActive('High score')} className={`whitespace-nowrap rounded-lg border px-3 py-2 text-[10px] ${active === 'High score' ? 'border-[#7ee7d0]/40 bg-[#7ee7d0]/10 text-[#9fe8d7]' : 'border-white/[.1] text-[#828d97]'}`} data-testid="filter-high-score">High score</button><button onClick={() => setRange(range === '2–5 mi' ? 'Any distance' : '2–5 mi')} className="flex items-center gap-1 whitespace-nowrap rounded-lg border border-white/[.1] px-3 py-2 text-[10px] text-[#828d97]" data-testid="button-distance-filter"><MapPin size={11} />{range}</button></div></div><div className="mt-5 grid gap-4 xl:grid-cols-3">{(active === 'High score' ? opportunities.filter(x => x.score > 85) : opportunities).map((item) => <OpportunityCard key={item.id} item={item} onRequest={() => setToast(`Connection request sent for Protected Professional #${item.id}`)} />)}</div></div>
-    <div className="reveal reveal-3 mt-12 grid gap-5 lg:grid-cols-2"><div className="rounded-2xl border border-white/[.08] bg-[#0e131a] p-6"><div className="flex items-start justify-between"><div><Eyebrow>Missed / last 7 days</Eyebrow><h2 className="mt-2 font-display text-xl">Paths you nearly crossed</h2></div><ArrowDownRight size={17} className="text-[#7f8993]" /></div><div className="mt-6 flex items-center gap-4 border-t border-white/[.07] pt-4"><div className="grid h-10 w-10 place-items-center rounded-xl bg-[#e4bf78]/10 text-[#e4bf78]"><Activity size={17} /></div><div><p className="text-sm text-[#d5d8d5]">A product + climate overlap</p><p className="mt-1 text-[11px] text-[#77828d]">No action needed · signal expires in 2 days</p></div></div><Link href="/xsects" className="mt-5 inline-block text-xs text-[#7ee7d0]" data-testid="link-view-missed">Review XSECT Missed <ChevronRight className="ml-1 inline" size={13} /></Link></div><div className="rounded-2xl border border-white/[.08] bg-[#0e131a] p-6"><div className="flex items-start justify-between"><div><Eyebrow>Moment / just now</Eyebrow><h2 className="mt-2 font-display text-xl">The timing is unusually clear</h2></div><Zap size={17} className="text-[#7ee7d0]" /></div><p className="mt-6 border-t border-white/[.07] pt-4 text-sm leading-relaxed text-[#9ca5ad]">Protected Professional #731 changed their intent to “seeking operating partner.” This is a rare timing convergence with your profile.</p><Link href="/discover" className="mt-5 inline-block text-xs text-[#7ee7d0]" data-testid="link-view-moment">Open the moment <ChevronRight className="ml-1 inline" size={13} /></Link></div></div>
-  </div>{toast && <Toast text={toast} onClose={() => setToast('')} />}</Shell>;
-}
-
-function Discover() {
-  const [toast, setToast] = useState(''); const [search, setSearch] = useState(''); const [saved, setSaved] = useState<string[]>([]);
-  const filtered = opportunities.filter(x => x.title.toLowerCase().includes(search.toLowerCase()) || x.type.toLowerCase().includes(search.toLowerCase()));
-  return <Shell><PageHeader eyebrow="Discover / live orbit" title="Find the meaningful overlap." sub="Browse protected opportunities surfaced by your intent, skills, timing, place, and trusted network." action={<Button variant="ghost" icon={Filter} testId="button-open-filters">Tune signals</Button>} /><div className="px-5 py-7 sm:px-9"><div className="flex flex-col gap-3 sm:flex-row"><div className="relative flex-1"><Search size={16} className="absolute left-3 top-3 text-[#6e7884]" /><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by intent, skill, or signal" className="w-full rounded-lg border border-white/[.1] bg-[#10151c] py-2.5 pl-10 pr-4 text-xs text-[#e6e9e5] outline-none placeholder:text-[#626c77] focus:border-[#7ee7d0]/45" data-testid="input-search-opportunities" /></div><div className="flex gap-2"><Pill tone="mint">Near your orbit</Pill><Pill>3 new today</Pill></div></div><div className="mt-8 flex items-center justify-between"><p className="font-mono-custom text-[10px] uppercase tracking-[.15em] text-[#68737d]">{filtered.length} protected signals</p><button onClick={() => setSaved([])} className="text-[11px] text-[#7d8892] hover:text-[#7ee7d0]" data-testid="button-clear-saved">Clear saved</button></div><div className="mt-4 grid gap-4 xl:grid-cols-2">{filtered.map((item) => <div key={item.id} className="relative"><OpportunityCard item={item} onRequest={() => setToast(`Connection request sent for Protected Professional #${item.id}`)} /><button onClick={() => setSaved(prev => prev.includes(item.id) ? prev.filter(id => id !== item.id) : [...prev, item.id])} className={`absolute right-5 top-[68px] rounded-full p-2 ${saved.includes(item.id) ? 'text-[#e4bf78]' : 'text-[#61707a] hover:text-[#e4bf78]'}`} aria-label="Save signal" data-testid={`button-save-${item.id}`}><Lightbulb size={15} /></button></div>)}</div>{filtered.length === 0 && <div className="rounded-2xl border border-dashed border-white/[.12] py-20 text-center"><Search className="mx-auto text-[#63707b]" /><p className="mt-4 text-sm text-[#a4adb5]">No signal is matching that search.</p><p className="mt-1 text-xs text-[#697580]">Try a broader intent or skill.</p></div>}</div>{toast && <Toast text={toast} onClose={() => setToast('')} />}</Shell>;
-}
-
-function Xsects() {
-  const [tab, setTab] = useState<'moments' | 'missed'>('moments');
-  return <Shell><PageHeader eyebrow="XSECTs / your archive" title="The paths between things." sub="A living record of the signals, moments, and near-misses that make your professional orbit legible." action={<Button icon={Database} testId="button-export-xsects">Export archive</Button>} /><div className="px-5 py-7 sm:px-9"><div className="grid grid-cols-2 gap-3 sm:grid-cols-4"><Metric label="XSECTs formed" value="18" detail="+4 this month" /><Metric label="Moments noticed" value="31" detail="78% acted on" /><Metric label="Missed" value="07" detail="2 still open" /><Metric label="Path density" value="High" detail="top 8% in orbit" /></div><div className="mt-10 flex gap-1 border-b border-white/[.08]"><button onClick={() => setTab('moments')} className={`border-b-2 px-4 py-3 text-xs ${tab === 'moments' ? 'border-[#7ee7d0] text-[#d8f8ef]' : 'border-transparent text-[#79848f]'}`} data-testid="tab-xsect-moments">XSECT Moments <span className="ml-2 font-mono-custom text-[10px]">12</span></button><button onClick={() => setTab('missed')} className={`border-b-2 px-4 py-3 text-xs ${tab === 'missed' ? 'border-[#e4bf78] text-[#f1ddb4]' : 'border-transparent text-[#79848f]'}`} data-testid="tab-xsect-missed">XSECT Missed <span className="ml-2 font-mono-custom text-[10px]">07</span></button></div>{tab === 'moments' ? <div className="mt-5 space-y-3">{[['Today · 08:19', 'Intent convergence detected', 'Your operating partner signal crossed with a protected climate systems profile.', '92'], ['Yesterday · 17:42', 'A trusted path appeared', 'Two people in your extended network independently referenced the same studio.', '84'], ['Mon · 11:05', 'Timing shifted', 'A research collective near your orbit moved from exploring to actively forming.', '78']].map(([time, title, desc, score], i) => <div key={title} className="group flex gap-4 rounded-2xl border border-white/[.08] bg-[#10151c] p-5 transition hover:border-[#7ee7d0]/25" data-testid={`moment-${i}`}><div className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#7ee7d0]/20 bg-[#7ee7d0]/[.07]"><Sparkles size={15} className="text-[#7ee7d0]" /></div><div className="flex-1"><div className="flex flex-wrap items-center justify-between gap-2"><p className="font-mono-custom text-[10px] uppercase tracking-[.12em] text-[#71808a]">{time}</p><Score value={Number(score)} /></div><h3 className="mt-3 font-display text-base text-[#e9ebe5]">{title}</h3><p className="mt-1 max-w-2xl text-xs leading-relaxed text-[#89949e]">{desc}</p></div><ChevronRight className="mt-2 text-[#596670]" size={16} /></div>)}</div> : <div className="mt-5 grid gap-4 md:grid-cols-2"><div className="rounded-2xl border border-[#e4bf78]/20 bg-[#151512] p-6"><Pill tone="amber">Near miss · 2 days ago</Pill><h3 className="mt-5 font-display text-xl">The climate operator you didn't see</h3><p className="mt-3 text-sm leading-relaxed text-[#99978d]">You and Protected Professional #416 were in the same orbit for 47 minutes. Their signal expired before your radar crossed.</p><div className="mt-6 flex items-center justify-between border-t border-white/[.08] pt-4"><span className="font-mono-custom text-[10px] text-[#78776e]">SoMa · approximate</span><button className="text-xs text-[#e4bf78]" data-testid="button-revisit-missed">Revisit signal <ArrowUpRight className="ml-1 inline" size={13} /></button></div></div><div className="flex min-h-[245px] items-center justify-center rounded-2xl border border-dashed border-white/[.12] bg-[#0d1218] p-6 text-center"><div><CircleHelp className="mx-auto text-[#66727c]" /><p className="mt-4 text-sm text-[#a1aab2]">Your next near-miss is still becoming visible.</p><p className="mt-1 text-xs text-[#68737f]">Keep your intent current to sharpen the signal.</p></div></div></div>}</div></Shell>;
-}
-
-function Metric({ label, value, detail }: { label: string; value: string; detail: string }) {
-  return <div className="rounded-xl border border-white/[.08] bg-[#10151c] p-4"><p className="text-[10px] text-[#7c8792]">{label}</p><p className="mt-3 font-display text-2xl text-[#e8e9e3]">{value}</p><p className="mt-1 font-mono-custom text-[9px] text-[#7ee7d0]">{detail}</p></div>;
-}
-
-function NetworkPage() {
-  const [expanded, setExpanded] = useState(false);
-  return <Shell><PageHeader eyebrow="Network / trusted paths" title="Proximity is not enough." sub="See the trusted paths that make a cold intersection feel human, while identities stay protected." action={<Button variant="ghost" icon={Users} testId="button-invite-network">Invite a trusted node</Button>} /><div className="px-5 py-7 sm:px-9"><div className="grid gap-5 xl:grid-cols-[.9fr_1.1fr]"><div className="rounded-2xl border border-white/[.08] bg-[#10151c] p-6"><Eyebrow>Your network orbit</Eyebrow><div className="relative mx-auto mt-8 aspect-square max-w-[330px]"><div className="absolute inset-[10%] rounded-full border border-[#e4bf78]/25"></div><div className="absolute inset-[27%] rounded-full border border-[#7ee7d0]/30"></div><div className="absolute inset-[42%] rounded-full border border-[#7ee7d0]/40 bg-[#7ee7d0]/5"></div><div className="absolute left-1/2 top-1/2 grid h-16 w-16 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-[#7ee7d0] bg-[#7ee7d0]/10"><span className="text-xs font-semibold text-[#baf4e6]">You</span></div>{[['18%', '34%', 'AM'], ['72%', '27%', 'R'], ['78%', '67%', 'J'], ['24%', '72%', 'K'], ['49%', '9%', 'N']].map(([x, y, t]) => <div key={t} className="absolute grid h-9 w-9 place-items-center rounded-full border border-white/[.25] bg-[#171e25] font-mono-custom text-[10px] text-[#bfc9c8]" style={{ left: x, top: y }}>{t}</div>)}<svg className="absolute inset-0 h-full w-full opacity-50"><path d="M50 50 L23 34 M50 50 L76 27 M50 50 L78 67 M50 50 L24 72 M50 50 L49 9" stroke="#7ee7d0" strokeDasharray="3 5" fill="none" /></svg></div><div className="mt-5 flex items-center justify-center gap-5 font-mono-custom text-[9px] uppercase tracking-[.1em] text-[#75818a]"><span><i className="mr-2 inline-block h-2 w-2 rounded-full bg-[#7ee7d0]"></i>trusted node</span><span><i className="mr-2 inline-block h-2 w-2 rounded-full bg-[#e4bf78]"></i>active path</span></div></div><div className="space-y-4"><div className="rounded-2xl border border-[#7ee7d0]/20 bg-[#111a1c] p-6"><div className="flex items-center justify-between"><div><Eyebrow>Best path right now</Eyebrow><h2 className="mt-3 font-display text-2xl">Through a shared studio</h2></div><div className="grid h-11 w-11 place-items-center rounded-xl bg-[#7ee7d0]/10"><Network size={19} className="text-[#7ee7d0]" /></div></div><p className="mt-4 text-sm leading-relaxed text-[#9ba9aa]">A trusted node in your network has a strong relationship with Protected Professional #284.</p><div className="mt-6 flex items-center gap-2 font-mono-custom text-[10px] text-[#7c9390]"><span className="rounded bg-white/[.05] px-2 py-1">YOU</span><span className="h-px flex-1 bg-[#7ee7d0]/35"></span><span className="rounded bg-white/[.05] px-2 py-1">TRUSTED NODE</span><span className="h-px flex-1 bg-[#7ee7d0]/35"></span><span className="rounded bg-[#7ee7d0]/10 px-2 py-1 text-[#9fe8d7]">#284</span></div><Button onClick={() => setExpanded(!expanded)} testId="button-reveal-path" variant="ghost" icon={expanded ? ArrowDownRight : ArrowUpRight}>{expanded ? 'Path details hidden' : 'Explore the path'}</Button>{expanded && <div className="mt-4 rounded-lg border border-white/[.08] bg-black/20 p-3 text-xs leading-relaxed text-[#a8b2b4]">The shared node is only revealed after both sides consent. For now, XSECT confirms a trusted overlap without exposing identity.</div>}</div><div className="rounded-2xl border border-white/[.08] bg-[#10151c] p-6"><div className="flex items-center justify-between"><div><p className="text-xs text-[#838e98]">Network health</p><p className="mt-2 font-display text-2xl">Strong & active</p></div><div className="font-mono-custom text-xs text-[#7ee7d0]">8.4 / 10</div></div><div className="mt-5 h-1.5 rounded-full bg-white/[.08]"><div className="h-1.5 w-[84%] rounded-full bg-[#7ee7d0]"></div></div><p className="mt-4 text-xs text-[#78838d]">Your trusted graph has grown 16% in the last 30 days.</p></div></div></div></div></Shell>;
-}
-
-function Intelligence() {
-  const [unlocked, setUnlocked] = useState(false); const [query, setQuery] = useState(''); const [answer, setAnswer] = useState('');
-  const run = () => { if (!query.trim()) return; setAnswer(`Around ${query.trim()}, XSECT sees 4 meaningful intersections: a systems operator, a research lead, and two trusted paths. The strongest timing signal is active through Friday.`); };
-  return <Shell><PageHeader eyebrow="Intelligence / signal layer" title="Ask what your orbit knows." sub="A private intelligence layer for making sense of weak signals across your professional world." action={<Pill tone={unlocked ? 'mint' : 'amber'}>{unlocked ? 'Intelligence active' : 'Preview mode'}</Pill>} /><div className="px-5 py-7 sm:px-9"><div className="mx-auto max-w-4xl">{!unlocked ? <div className="relative overflow-hidden rounded-3xl border border-[#e4bf78]/25 bg-[#151512] p-7 sm:p-12"><div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#e4bf78]/[.06] blur-3xl"></div><div className="relative max-w-xl"><div className="grid h-12 w-12 place-items-center rounded-2xl border border-[#e4bf78]/35 bg-[#e4bf78]/10"><Bot size={22} className="text-[#e4bf78]" /></div><h2 className="mt-7 font-display text-3xl tracking-[-.04em] sm:text-4xl">Go beyond the visible signal.</h2><p className="mt-4 text-sm leading-relaxed text-[#a8a395]">Intelligence connects the dots your radar can’t show at a glance — recurring themes, emerging clusters, and the next most useful path through your network.</p><div className="mt-7 space-y-3"><div className="flex gap-3 text-sm text-[#d0cab9]"><Sparkles size={16} className="mt-0.5 shrink-0 text-[#e4bf78]" />Read the shape behind multiple signals</div><div className="flex gap-3 text-sm text-[#d0cab9]"><ShieldCheck size={16} className="mt-0.5 shrink-0 text-[#e4bf78]" />Keep every identity and location protected</div><div className="flex gap-3 text-sm text-[#d0cab9]"><Zap size={16} className="mt-0.5 shrink-0 text-[#e4bf78]" />Surface timing before it becomes obvious</div></div><Button onClick={() => setUnlocked(true)} testId="button-unlock-intelligence" icon={ArrowUpRight}>Unlock Intelligence demo</Button><p className="mt-3 font-mono-custom text-[9px] uppercase tracking-[.1em] text-[#746f62]">Demo access · no payment required</p></div></div> : <div className="rounded-3xl border border-[#7ee7d0]/20 bg-[#101719] p-6 sm:p-9"><div className="flex items-center justify-between"><div><Eyebrow>Intelligence active</Eyebrow><h2 className="mt-3 font-display text-2xl">What are you trying to understand?</h2></div><div className="grid h-11 w-11 place-items-center rounded-xl bg-[#7ee7d0]/10"><Bot size={20} className="text-[#7ee7d0]" /></div></div><div className="mt-7 flex flex-col gap-3 sm:flex-row"><input value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && run()} placeholder="e.g. Where are the strongest climate operator paths?" className="flex-1 rounded-lg border border-white/[.12] bg-[#0b1015] px-4 py-3 text-sm text-[#e7ece8] outline-none placeholder:text-[#626f79] focus:border-[#7ee7d0]/45" data-testid="input-intelligence-query" /><Button onClick={run} testId="button-run-intelligence" icon={ArrowUpRight}>Read the signal</Button></div>{answer ? <div className="mt-7 rounded-2xl border border-[#7ee7d0]/20 bg-[#7ee7d0]/[.05] p-5"><div className="flex gap-3"><Sparkles size={16} className="mt-0.5 shrink-0 text-[#7ee7d0]" /><p className="text-sm leading-relaxed text-[#c2ddd7]">{answer}</p></div><div className="mt-5 flex flex-wrap gap-2"><Pill tone="mint">4 intersections</Pill><Pill tone="amber">timing: active</Pill><Pill>protected view</Pill></div></div> : <div className="mt-7 grid gap-3 sm:grid-cols-3">{['Where is momentum building?', 'Who is one path away?', 'What changed this week?'].map((suggestion, i) => <button key={suggestion} onClick={() => { setQuery(suggestion); }} className="rounded-xl border border-white/[.08] bg-white/[.025] p-4 text-left text-xs text-[#9da9ad] transition hover:border-[#7ee7d0]/30 hover:text-[#d8f1e9]" data-testid={`button-suggestion-${i}`}><Search size={14} className="mb-4 text-[#7ee7d0]" />{suggestion}<ChevronRight size={13} className="mt-3 text-[#606c75]" /></button>)}</div>}</div>}</div></div></Shell>;
-}
-
-function Profile() {
-  const [open, setOpen] = useState(true); const [saved, setSaved] = useState(false);
-  return <Shell><PageHeader eyebrow="Profile / your signal" title="Make your intent legible." sub="The clearer your signal, the more precise the intersections XSECT can protect and surface." action={<Button onClick={() => setSaved(!saved)} variant="ghost" icon={saved ? ShieldCheck : Settings2} testId="button-edit-profile">{saved ? 'Saved' : 'Edit profile'}</Button>} /><div className="px-5 py-7 sm:px-9"><div className="grid gap-5 xl:grid-cols-[.75fr_1.25fr]"><div className="rounded-2xl border border-white/[.08] bg-[#10151c] p-6"><div className="flex items-center gap-4"><div className="grid h-16 w-16 place-items-center rounded-2xl bg-[#c6d2bc] text-lg font-bold text-[#172019]">AM</div><div><h2 className="font-display text-xl">Alex Morgan</h2><p className="mt-1 text-xs text-[#87929d]">Operator · climate systems</p><p className="mt-2 flex items-center gap-1 font-mono-custom text-[9px] uppercase tracking-[.1em] text-[#7ee7d0]"><ShieldCheck size={11} /> identity protected</p></div></div><div className="mt-7 border-t border-white/[.08] pt-5"><div className="flex justify-between text-xs"><span className="text-[#89949e]">Signal completeness</span><span className="font-mono-custom text-[#7ee7d0]">84%</span></div><div className="mt-3 h-1.5 rounded-full bg-white/[.08]"><div className="h-1.5 w-[84%] rounded-full bg-[#7ee7d0]"></div></div></div><div className="mt-7 grid grid-cols-2 gap-3"><div className="rounded-xl bg-white/[.03] p-3"><p className="font-mono-custom text-xl text-[#e7e8e2]">24</p><p className="mt-1 text-[10px] text-[#78838d]">trusted nodes</p></div><div className="rounded-xl bg-white/[.03] p-3"><p className="font-mono-custom text-xl text-[#e7e8e2]">18</p><p className="mt-1 text-[10px] text-[#78838d]">XSECTs formed</p></div></div></div><div className="space-y-5"><div className="rounded-2xl border border-[#7ee7d0]/20 bg-[#11191b] p-6"><div className="flex items-start justify-between"><div><Eyebrow>Current intent</Eyebrow><h2 className="mt-3 font-display text-2xl">Building with people who see systems differently.</h2></div><button onClick={() => setOpen(!open)} aria-label="Toggle intent visibility" className={`relative h-6 w-11 rounded-full transition ${open ? 'bg-[#7ee7d0]' : 'bg-white/[.15]'}`} data-testid="toggle-intent-visibility"><span className={`absolute top-1 h-4 w-4 rounded-full bg-[#0b1213] transition ${open ? 'left-6' : 'left-1'}`}></span></button></div><p className="mt-4 max-w-2xl text-sm leading-relaxed text-[#9cafad]">Looking for an operating partner or a small team exploring climate, public space, and resilient systems.</p><div className="mt-6 flex flex-wrap gap-2"><Pill tone="mint">operating partner</Pill><Pill tone="mint">climate systems</Pill><Pill>SF Bay · flexible</Pill><Pill>next 90 days</Pill></div><div className="mt-6 flex items-center gap-2 border-t border-white/[.08] pt-4 text-[10px] text-[#78878b]"><EyeOff size={13} />Your identity is hidden from everyone until mutual consent.</div></div><div className="rounded-2xl border border-white/[.08] bg-[#10151c] p-6"><div className="flex items-center justify-between"><div><Eyebrow>How your score is built</Eyebrow><h2 className="mt-3 font-display text-xl">XSECT Score</h2></div><Score value={84} large /></div><div className="mt-6 grid gap-3 sm:grid-cols-2">{[['Intent clarity', '92', 'Strong'], ['Skills adjacency', '86', 'Strong'], ['Timing signal', '78', 'Active'], ['Network trust', '81', 'Healthy']].map(([label, val, state]) => <div key={label} className="flex items-center justify-between rounded-lg bg-white/[.03] px-4 py-3"><span className="text-xs text-[#9da6ae]">{label}</span><span className="font-mono-custom text-[11px] text-[#7ee7d0]">{val} <small className="ml-1 text-[#68767b]">{state}</small></span></div>)}</div></div></div></div></div></Shell>;
-}
-
-function Router() {
-  return <Switch><Route path="/" component={Home} /><Route path="/discover" component={Discover} /><Route path="/xsects" component={Xsects} /><Route path="/network" component={NetworkPage} /><Route path="/ai" component={Intelligence} /><Route path="/profile" component={Profile} /><Route><Shell><div className="p-10 text-center"><h1 className="font-display text-3xl">Signal not found.</h1><Link href="/" className="mt-4 inline-block text-sm text-[#7ee7d0]" data-testid="link-return-radar">Return to Radar</Link></div></Shell></Route></Switch>;
-}
-
-export default function App() {
-  return <div className="dark"><Router /></div>;
-}
+export default App;
