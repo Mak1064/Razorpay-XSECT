@@ -1,0 +1,2860 @@
+# XSECT
+
+## The Opportunity Network
+
+### Product tagline
+
+**Your next opportunity is already on your path.**
+
+### Core concept
+
+People cross paths every day.
+
+Most professional opportunities disappear with those crossings.
+
+**XSECT** discovers meaningful intersections between:
+
+* People
+* Professional intent
+* Skills
+* Opportunities
+* Location
+* Time
+* Availability
+* Events
+* Existing relationships
+* Trust
+* Organizations
+* Professional goals
+
+XSECT helps users discover people and opportunities they might otherwise never encounter while keeping identity, contact information, and exact location protected until mutual consent.
+
+---
+
+# 1. PRODUCT VISION
+
+Build XSECT as a premium, venture-scale, mobile-first professional opportunity network.
+
+Do NOT position it as:
+
+* a dating app
+* a generic social network
+* a LinkedIn clone
+* a job board
+* a freelancer marketplace
+* a “people nearby” app
+* a generic AI networking assistant
+
+XSECT is:
+
+> **A professional opportunity intelligence network that detects meaningful intersections between people, intent, time, place, and professional networks.**
+
+The fundamental object in the system is an:
+
+# XSECT
+
+An XSECT occurs when two or more relevant professional signals intersect.
+
+Examples:
+
+### Physical XSECT
+
+Two professionals physically cross paths.
+
+### Intent XSECT
+
+One person's Want matches another person's Offer.
+
+### Network XSECT
+
+Two people are connected through an intermediate professional.
+
+### Time XSECT
+
+Two compatible professional needs become relevant at the same time.
+
+### Event XSECT
+
+People with complementary professional intent attend the same event.
+
+### Opportunity XSECT
+
+A person's goal intersects with an available opportunity.
+
+The platform should make these intersections discoverable.
+
+---
+
+# 2. BRAND LANGUAGE
+
+Use XSECT terminology throughout the application.
+
+Do NOT repeatedly call everything a “match.”
+
+Core terminology:
+
+### XSECT
+
+A meaningful intersection between professional signals.
+
+### XSECT Radar
+
+The user's personalized opportunity radar.
+
+### XSECT Paths
+
+Paths connecting the user to people or opportunities.
+
+### XSECT Intelligence
+
+The AI intelligence layer.
+
+### XSECT Moments
+
+Important professional intersections.
+
+### XSECT Missed
+
+Potential opportunities the user almost encountered.
+
+### XSECT Bridge
+
+Warm introduction paths.
+
+### XSECT Events
+
+Professional event networking.
+
+### XSECT Score
+
+Explainable relevance score.
+
+### XSECT Pro
+
+Premium subscription.
+
+---
+
+# 3. VISUAL IDENTITY
+
+Create a distinctive premium identity.
+
+The logo should be based on an **X formed by two crossing paths**.
+
+Concept:
+
+Two independent trajectories:
+
+```text
+────────╲      ╱────────
+         ╲    ╱
+          ╲  ╱
+           ╳
+          ╱  ╲
+         ╱    ╲
+────────╱      ╲────────
+```
+
+The X represents:
+
+* crossing paths
+* intersecting networks
+* opportunity
+* convergence
+* a moment in time
+
+Use the X as a recurring visual motif.
+
+Visual style:
+
+* premium
+* cinematic
+* modern
+* sophisticated
+* dark-first
+* high contrast
+* subtle gradients
+* glass effects used sparingly
+* smooth transitions
+* excellent typography
+* strong information hierarchy
+
+Avoid:
+
+* childish gamification
+* excessive neon
+* generic SaaS blue dashboards
+* dating-app aesthetics
+* excessive emojis
+* clutter
+
+---
+
+# 4. APPLICATION STRUCTURE
+
+Main navigation:
+
+### Home
+
+XSECT Radar
+
+### Discover
+
+Professional opportunities
+
+### XSECTs
+
+Current and missed intersections
+
+### Network
+
+Connections and introductions
+
+### AI
+
+XSECT Intelligence
+
+### Profile
+
+Professional identity and settings
+
+On mobile use a bottom navigation bar.
+
+On desktop use a premium sidebar/dashboard navigation.
+
+---
+
+# 5. AUTHENTICATION
+
+Use Clerk authentication.
+
+Support:
+
+* Email authentication
+* Google sign-in where available
+* Sign up
+* Sign in
+* Sign out
+* Session management
+* Protected routes
+
+Every authenticated Clerk identity must map to one XSECT user.
+
+Never accept an arbitrary user ID from the client.
+
+The backend must derive the authenticated user from the session.
+
+---
+
+# 6. ONBOARDING
+
+Build a premium onboarding experience.
+
+## STEP 1
+
+### What brings you to XSECT?
+
+Multi-select:
+
+* Find a job
+* Find clients
+* Find freelancers
+* Find collaborators
+* Find cofounders
+* Find investors
+* Find mentors
+* Find advisors
+* Get referrals
+* Give referrals
+* Find partnerships
+* Discover opportunities
+* Offer expertise
+* Find professional services
+
+---
+
+## STEP 2
+
+### What can you offer?
+
+Skills and professional capabilities.
+
+Examples:
+
+* Product
+* Engineering
+* Growth
+* Marketing
+* Sales
+* Design
+* Finance
+* Legal
+* Operations
+* Fundraising
+* Consulting
+* Leadership
+
+Allow custom skills.
+
+---
+
+## STEP 3
+
+### What are you looking for?
+
+Create initial Wants.
+
+---
+
+## STEP 4
+
+### Professional identity
+
+Fields:
+
+* Name
+* Professional headline
+* Role
+* Company
+* Industry
+* Experience
+* Skills
+* Bio
+* Website
+* LinkedIn
+* GitHub
+* Portfolio
+
+---
+
+## STEP 5
+
+### Availability
+
+Options:
+
+* Available now
+* Today
+* This week
+* Flexible
+* Recurring availability
+
+Support recurring availability rules.
+
+---
+
+## STEP 6
+
+### Discovery
+
+Configure:
+
+* discovery radius
+* categories
+* trust requirement
+* availability
+* visibility
+* notifications
+
+---
+
+## STEP 7
+
+### Privacy
+
+Explain clearly:
+
+> XSECT protects your identity and exact location until both people agree to connect.
+
+Show what remains hidden.
+
+---
+
+# 7. PROFESSIONAL PROFILE
+
+Create a professional profile containing:
+
+* name
+* photo
+* professional headline
+* title
+* company
+* industry
+* experience
+* skills
+* professional interests
+* Wants
+* Offers
+* availability
+* approximate location
+* trust level
+* reputation
+* successful connections
+* introductions
+* completed opportunities
+
+Protected profile rendering must respect consent rules.
+
+---
+
+# 8. PROFESSIONAL TWIN
+
+Create an AI-powered:
+
+# Professional Twin
+
+This is NOT a fake AI version of the user.
+
+It is a structured representation of:
+
+* skills
+* experience
+* professional goals
+* Wants
+* Offers
+* interests
+* industries
+* preferred opportunities
+* availability
+* networking goals
+
+Display:
+
+### Your Professional Twin
+
+**What you offer**
+
+**What you want**
+
+**What you're good at**
+
+**Who you should meet**
+
+**What opportunities fit you**
+
+Allow the user to correct and edit AI-generated attributes.
+
+---
+
+# 9. WANTS
+
+Users can create professional Wants.
+
+Examples:
+
+* Looking for job
+* Looking for referral
+* Looking for investor
+* Looking for cofounder
+* Looking for mentor
+* Looking for advisor
+* Looking for freelancer
+* Looking for client
+* Looking for partnership
+* Looking for introduction
+* Looking for advice
+* Looking for service
+
+Fields:
+
+* title
+* description
+* category
+* skills
+* industry
+* location preference
+* radius
+* urgency
+* availability
+* expiration
+* remote/hybrid/in-person
+* visibility
+* trust requirement
+
+Intent:
+
+### Casual
+
+Open to conversation.
+
+### Active
+
+Currently looking.
+
+### Urgent
+
+Needs fast action.
+
+---
+
+# 10. OFFERS
+
+Users can publish Offers.
+
+Examples:
+
+* Hiring
+* Mentoring
+* Referrals
+* Introductions
+* Consulting
+* Freelancing
+* Investment
+* Partnership
+* Services
+* Expertise
+* Resources
+
+Use equivalent structured fields.
+
+Allow multiple active Offers.
+
+---
+
+# 11. ORGANIZATIONS
+
+Create organization profiles.
+
+Organizations can publish:
+
+* jobs
+* partnerships
+* freelance opportunities
+* vendor requirements
+* mentorship
+* events
+* investor opportunities
+* collaboration opportunities
+* professional services
+
+Organization fields:
+
+* name
+* logo
+* description
+* industry
+* size
+* location
+* website
+* verification state
+
+Organizations can have members/admins.
+
+---
+
+# 12. XSECT MATCHING ENGINE
+
+Create a real matching engine.
+
+Do not randomly generate compatibility.
+
+Calculate XSECT Score using:
+
+```text
+Intent compatibility
++
+Skill compatibility
++
+Industry compatibility
++
+Goal compatibility
++
+Geographic proximity
++
+Availability overlap
++
+Urgency
++
+Trust compatibility
++
+Recent activity
++
+Opportunity freshness
++
+Network proximity
+```
+
+Normalize to 0–100.
+
+Store the individual scoring factors.
+
+Example:
+
+```text
+XSECT SCORE
+92
+
+Intent       98
+Skills       94
+Timing       91
+Location     88
+Trust        95
+Freshness    93
+```
+
+Always explain the recommendation.
+
+---
+
+# 13. XSECT TYPES
+
+Every XSECT should have a type.
+
+## PHYSICAL XSECT
+
+Two relevant people crossed within the permitted proximity window.
+
+## INTENT XSECT
+
+Want ↔ Offer compatibility.
+
+## NETWORK XSECT
+
+A professional path connects two users.
+
+## TIME XSECT
+
+Compatible intent becomes active simultaneously.
+
+## EVENT XSECT
+
+Two or more relevant professionals attend the same event.
+
+## OPPORTUNITY XSECT
+
+User goal ↔ available opportunity.
+
+The UI should visually distinguish these.
+
+---
+
+# 14. XSECT RADAR
+
+Make this the primary home experience.
+
+Headline:
+
+# What's crossing your path?
+
+Display:
+
+### 7 XSECTs detected
+
+Example:
+
+**2 Hot XSECTs**
+
+**2 Network XSECTs**
+
+**1 Time XSECT**
+
+**2 Missed XSECTs**
+
+---
+
+Each card should contain:
+
+* protected identity
+* approximate distance
+* intent
+* Offer/Want
+* XSECT type
+* XSECT Score
+* trust
+* availability
+* urgency
+* explanation
+* CTA
+
+---
+
+# 15. PROTECTED XSECT CARD
+
+Example:
+
+```text
+PROTECTED PROFESSIONAL #4821
+
+~350m away
+
+WANT
+Enterprise GTM introduction
+
+TRUST
+Professional
+
+AVAILABLE
+Today
+
+XSECT SCORE
+92
+
+WHY THIS XSECT?
+
+✓ Complementary professional goals
+✓ Same industry
+✓ Both active today
+✓ Recently crossed paths
+
+[ REQUEST CONNECTION ]
+```
+
+Before consent do NOT expose:
+
+* full name
+* avatar
+* email
+* phone
+* exact location
+* private connections
+
+---
+
+# 16. XSECT SCORE EXPLANATION
+
+Never only show:
+
+> 92%
+
+Show:
+
+### Why this XSECT?
+
+Example:
+
+> Their current Want aligns with your Offer.
+
+> You're both active this week.
+
+> You share relevant professional interests.
+
+> You recently crossed within the configured area.
+
+> Both profiles meet your trust preferences.
+
+---
+
+# 17. PHYSICAL PROXIMITY
+
+Never expose exact coordinates.
+
+Use secure approximate representations.
+
+Supported distance bands:
+
+* <250m
+* 250–500m
+* 500m–1km
+* 1–2km
+* 2–5km
+* 5km+
+
+The system can internally use more precise geospatial information where necessary, but the UI must never expose precise location.
+
+Never show exact addresses.
+
+Never show movement trails.
+
+---
+
+# 18. CROSSING ENGINE
+
+Implement a CrossingEvent abstraction.
+
+For hackathon/demo purposes, support simulated crossings.
+
+Crossing event:
+
+```text
+user A
+user B
+approximate area
+timestamp
+distance band
+duration
+```
+
+Create crossing records.
+
+Architecture should later support:
+
+* GPS
+* background location
+* geofencing
+* real-time event streams
+
+But do not falsely claim those capabilities exist.
+
+---
+
+# 19. XSECT MISSED
+
+Create:
+
+# XSECT MISSED
+
+A journal of opportunities the user almost encountered.
+
+Example:
+
+```text
+YOU MISSED AN XSECT
+
+Today · 4:32 PM
+
+~300m away
+
+Protected Professional #721
+
+OFFER
+Enterprise introductions
+
+YOUR WANT
+US enterprise customers
+
+XSECT SCORE
+94
+
+Opportunity
+Still active
+
+[ REQUEST CONNECTION ]
+```
+
+Statuses:
+
+* active
+* expired
+* dismissed
+* requested
+* connected
+
+---
+
+# 20. REPEATED XSECTS
+
+Detect repeated physical overlap.
+
+Example:
+
+> You've XSECTed with this protected professional 4 times this month.
+
+Do not reveal identity.
+
+Explain:
+
+> You repeatedly overlap geographically and have compatible professional intent.
+
+Allow:
+
+### Request Connection
+
+---
+
+# 21. XSECT MOMENTS
+
+Create a timeline of meaningful intersections.
+
+Examples:
+
+> Someone nearby needs exactly what you offer.
+
+> Your professional network intersected with an investor.
+
+> You almost met a potential collaborator.
+
+> A dormant connection just became relevant.
+
+> Three people attending your event match your goals.
+
+This becomes a personalized professional serendipity feed.
+
+---
+
+# 22. XSECT PATHS
+
+Build a path-discovery interface.
+
+User enters:
+
+> I need an introduction to US enterprise solar companies.
+
+XSECT searches the graph.
+
+Example:
+
+```text
+YOU
+ │
+ ├── Alex
+ │     │
+ │     └── Sarah
+ │           │
+ │           └── Enterprise Buyer
+ │
+ ├── David
+ │      │
+ │      └── Energy Investor
+ │             │
+ │             └── Portfolio Company
+ │
+ └── Protected Professional
+```
+
+Show:
+
+* number of steps
+* relationship strength
+* trust
+* relevance
+* why the path matters
+
+---
+
+# 23. NETWORK XSECTS
+
+The system should discover indirect connections.
+
+Example:
+
+> You don't know Sarah.
+
+But:
+
+> Alex appears to be connected with Sarah.
+
+Show:
+
+### 2-step XSECT
+
+> Me → Alex → Sarah
+
+Allow:
+
+### Request Introduction
+
+Never reveal private relationship data without permission.
+
+---
+
+# 24. XSECT BRIDGE
+
+Create a warm-introduction workflow.
+
+User requests introduction.
+
+The intermediary receives:
+
+> Mehul would like an introduction to Sarah because...
+
+Options:
+
+* Accept
+* Decline
+* Ignore
+
+If accepted:
+
+Create a controlled introduction flow.
+
+---
+
+# 25. STANDING XSECT ALERTS
+
+Allow users to watch for future opportunities.
+
+Examples:
+
+> Alert me when I XSECT someone looking for a React developer.
+
+> Alert me when a founder looking for a growth advisor appears nearby.
+
+> Alert me when an investor relevant to my profile enters my configured radius.
+
+Store:
+
+* criteria
+* category
+* radius
+* trust requirement
+* notification frequency
+* expiration
+
+When triggered:
+
+* create XSECT
+* create notification
+* preserve privacy
+* allow request
+
+---
+
+# 26. TIME XSECTS
+
+Time must be a first-class matching signal.
+
+Example:
+
+User:
+
+> Available today 2–6 PM.
+
+Other person:
+
+> Needs developer today.
+
+Create:
+
+### TIME XSECT
+
+> Your availability overlaps.
+
+Rank this higher than a generic future opportunity where appropriate.
+
+---
+
+# 27. OPPORTUNITY MAP
+
+Create an anonymized opportunity map.
+
+Do NOT show people as exact pins.
+
+Show clusters.
+
+Example:
+
+```text
+KORAMANGALA
+47 opportunities
+
+INDIRANAGAR
+31 opportunities
+
+HSR
+24 opportunities
+```
+
+Categories:
+
+* Hiring
+* Freelance
+* Founders
+* Investment
+* Referrals
+* Mentorship
+* Collaboration
+* Services
+
+Clicking a cluster shows aggregate opportunity data.
+
+---
+
+# 28. EVENTS
+
+Create events.
+
+Fields:
+
+* event name
+* organizer
+* description
+* venue
+* approximate location
+* date
+* time
+* category
+* attendees
+
+Users can RSVP.
+
+---
+
+# 29. EVENT XSECT MODE
+
+During an event show:
+
+```text
+EVENT XSECT
+
+Bengaluru SaaS Founders Meetup
+
+17 relevant XSECT members
+
+5 potentially useful connections
+
+3 hiring opportunities
+
+2 founder opportunities
+```
+
+Allow:
+
+### Who should I meet?
+
+AI ranks protected participants.
+
+Do not reveal identity until consent.
+
+---
+
+# 30. XSECT AI
+
+Create the main AI interface:
+
+# XSECT Intelligence
+
+Users can ask:
+
+> Who should I meet?
+
+> What opportunities am I missing?
+
+> Find someone who can introduce me to US enterprise customers.
+
+> Who nearby could help me fundraise?
+
+> Who should I meet at this event?
+
+> Find potential collaborators.
+
+> What is my strongest opportunity this week?
+
+The AI must query actual XSECT data.
+
+Never invent users, relationships or opportunities.
+
+Every answer should cite the underlying reason/data internally and present a human-readable explanation.
+
+---
+
+# 31. XSECT AI AGENT
+
+Create a persistent AI agent.
+
+User:
+
+> I'm looking for a Series A startup where I can lead growth.
+
+Convert this to structured intent:
+
+```text
+Role: Growth
+Company stage: Series A
+Industry: Flexible
+Location: Bengaluru / Remote
+Availability: This month
+```
+
+The agent then monitors relevant XSECT signals.
+
+Display:
+
+> XSECT Agent found 4 opportunities.
+
+Allow users to modify the agent's criteria.
+
+Do not perform external actions without confirmation.
+
+---
+
+# 32. PROFESSIONAL REPUTATION
+
+Track:
+
+* successful connections
+* completed opportunities
+* introductions given
+* introductions received
+* response rate
+* successful collaborations
+* reviews
+* trust progression
+
+Example:
+
+```text
+PROFESSIONAL REPUTATION
+
+47 connections
+12 successful introductions
+8 opportunities completed
+19 referrals given
+94% response rate
+```
+
+Subscription status must NOT automatically determine trust.
+
+---
+
+# 33. TRUST SYSTEM
+
+Levels:
+
+### CONTACT
+
+Basic trust.
+
+### PROFESSIONAL
+
+Higher trust.
+
+### ENHANCED
+
+Highest demo trust.
+
+Important:
+
+This is a product trust model.
+
+Do not claim formal:
+
+* government identity verification
+* employment verification
+* background checks
+* criminal checks
+
+unless an actual external verification integration is implemented.
+
+---
+
+# 34. PRIVACY CONTROLS
+
+Implement:
+
+### Trusted Only
+
+Only discover users meeting chosen trust level.
+
+### Women-only discovery
+
+Only available when explicitly selected by an eligible self-identified user.
+
+Never infer gender.
+
+### Ghost Mode
+
+Remove the user from discovery.
+
+### Stealth Mode
+
+User is discoverable only for configured professional intents.
+
+### Discovery radius
+
+Allow configurable range.
+
+### Visibility controls
+
+* Discoverable
+* Trusted Only
+* Stealth
+* Ghost
+
+These rules must apply to:
+
+* Discover
+* XSECT Radar
+* Matches
+* Crossings
+* Missed XSECTs
+* Alerts
+* AI recommendations
+* Event recommendations
+* Requests
+
+Check eligibility from BOTH participants.
+
+---
+
+# 35. CONSENT SYSTEM
+
+Connection states:
+
+```text
+DISCOVERED
+REQUESTED
+RECIPIENT_APPROVED
+MUTUAL_CONSENT
+CONNECTED
+REJECTED
+EXPIRED
+```
+
+Identity reveal occurs only at:
+
+```text
+MUTUAL_CONSENT + CONNECTED
+```
+
+Chat requires:
+
+```text
+both consented
+AND connected
+AND current user is participant
+```
+
+Enforce this server-side.
+
+---
+
+# 36. CHAT
+
+Build persistent chat.
+
+Requirements:
+
+* conversation
+* messages
+* timestamps
+* read state
+* block
+* report
+* participant authorization
+
+No chat before connection.
+
+---
+
+# 37. REVIEWS
+
+Allow reviews only after a mutually consented connection.
+
+Review target must be derived from the actual connection.
+
+Never allow client to freely choose target user.
+
+Fields:
+
+* rating
+* professionalism
+* reliability
+* helpfulness
+* comment
+
+Allow report.
+
+---
+
+# 38. NOTIFICATIONS
+
+Types:
+
+* XSECT detected
+* XSECT Missed
+* connection request
+* request accepted
+* mutual consent
+* new message
+* standing alert
+* introduction request
+* introduction accepted
+* event reminder
+* opportunity expiring
+* someone needs what you offer
+* AI recommendation
+* XSECT Agent discovery
+
+Create read/unread state.
+
+---
+
+# 39. HOME DASHBOARD
+
+Create a premium dashboard.
+
+Header:
+
+> Good afternoon, Mehul.
+
+Then:
+
+# Your XSECT Radar
+
+Large summary:
+
+```text
+7 XSECTS
+3 people to meet
+2 missed
+1 warm introduction
+1 urgent opportunity
+```
+
+Then:
+
+### Hot XSECTS
+
+Protected opportunity cards.
+
+Then:
+
+### XSECT Missed
+
+Then:
+
+### XSECT Intelligence
+
+Example:
+
+> You have unusually strong overlap with climate-tech founders this week.
+
+Then:
+
+### Opportunity Map
+
+Then:
+
+### Upcoming Events
+
+---
+
+# 40. DISCOVER SCREEN
+
+Sections:
+
+### For You
+
+### Nearby Opportunities
+
+### People Who Need What You Offer
+
+### Organizations
+
+### Hiring
+
+### Collaboration
+
+### Referrals
+
+### Mentorship
+
+### Services
+
+Use protected identities.
+
+---
+
+# 41. NETWORK SCREEN
+
+Tabs:
+
+### Connections
+
+### Introductions
+
+### Requests
+
+### Conversations
+
+### Reputation
+
+---
+
+# 42. PROFILE SCREEN
+
+Show:
+
+### Professional Twin
+
+### Offers
+
+### Wants
+
+### Skills
+
+### Reputation
+
+### Trust
+
+### Privacy
+
+### Availability
+
+### Subscription
+
+---
+
+# 43. PAYWALL
+
+Create a production-style subscription system.
+
+Plans:
+
+# FREE
+
+$0
+
+Includes:
+
+* profile
+* basic Wants
+* basic Offers
+* limited discovery
+* limited XSECTs
+* limited AI queries
+* limited XSECT Missed history
+* connection after mutual consent
+* basic profile analytics
+
+---
+
+# XSECT PRO
+
+### $9.99/month
+
+Includes:
+
+* unlimited Wants
+* unlimited Offers
+* expanded discovery
+* unlimited XSECT discovery
+* unlimited XSECT Missed history
+* standing XSECT alerts
+* advanced filters
+* XSECT Radar
+* XSECT Intelligence
+* warm introduction discovery
+* Event XSECT
+* Stealth Mode
+* advanced reputation analytics
+* expanded opportunity graph
+
+Annual:
+
+### $99/year
+
+---
+
+# XSECT PRO+
+
+### $24.99/month
+
+Includes everything in Pro plus:
+
+* XSECT AI Agent
+* advanced opportunity graph
+* priority opportunity discovery
+* advanced AI matchmaking
+* unlimited AI queries
+* organization intelligence
+* advanced event intelligence
+* premium alerts
+* advanced Professional Twin
+* advanced network-path discovery
+* advanced opportunity analytics
+
+Annual:
+
+### $249/year
+
+---
+
+# 44. PAYWALL EXPERIENCE
+
+Do not aggressively block the whole application.
+
+Use feature-based gates.
+
+Example:
+
+User clicks:
+
+### Ask XSECT Intelligence
+
+Free user sees:
+
+> # Unlock XSECT Intelligence
+>
+> Discover people, opportunities and connection paths that aren't visible through basic discovery.
+>
+> ✓ AI opportunity discovery
+>
+> ✓ Explainable XSECT recommendations
+>
+> ✓ Network paths
+>
+> ✓ Warm introduction discovery
+>
+> ✓ Advanced Opportunity Radar
+>
+> **$9.99/month**
+>
+> [Start XSECT Pro]
+>
+> Continue with Free
+
+---
+
+# 45. BILLING ARCHITECTURE
+
+Create:
+
+```text
+Subscription
+Plan
+Entitlement
+BillingEvent
+```
+
+Entitlements:
+
+```text
+ai_intelligence
+ai_agent
+unlimited_xsects
+standing_alerts
+advanced_radar
+warm_introductions
+event_intelligence
+stealth_mode
+advanced_analytics
+opportunity_graph
+```
+
+Backend must check entitlements.
+
+Do not rely solely on frontend feature hiding.
+
+Create a billing abstraction so a real provider can be plugged in later.
+
+For the hackathon, support mock/demo checkout.
+
+---
+
+# 46. SUBSCRIPTION DEMO
+
+Create admin/developer controls:
+
+```text
+FREE
+PRO
+PRO+
+```
+
+Changing plan immediately changes backend entitlements.
+
+This must be visible in demo mode.
+
+---
+
+# 47. ADMIN DASHBOARD
+
+Build a serious admin console.
+
+### Overview
+
+* users
+* active users
+* active Wants
+* active Offers
+* XSECTs
+* connections
+* missed XSECTs
+* introductions
+* subscriptions
+* MRR
+* conversion
+
+### Users
+
+* profile
+* trust
+* verification
+* activity
+* moderation
+* subscription
+
+### Opportunities
+
+* Wants
+* Offers
+* Organizations
+
+### XSECTs
+
+* type
+* score
+* participants
+* crossing
+* status
+
+### Crossings
+
+* simulated crossing events
+* missed XSECTs
+* repeated XSECTs
+
+### Safety
+
+* reports
+* blocks
+* suspicious behavior
+
+### Billing
+
+* subscriptions
+* plans
+* revenue
+* entitlements
+
+---
+
+# 48. ANALYTICS
+
+Track:
+
+```text
+signup
+profile_completed
+want_created
+offer_created
+xsect_created
+xsect_viewed
+request_sent
+request_accepted
+mutual_consent
+connection_created
+chat_started
+crossing_created
+missed_xsect_viewed
+standing_alert_created
+introduction_requested
+introduction_accepted
+event_rsvp
+ai_query
+ai_recommendation
+subscription_viewed
+checkout_started
+subscription_started
+```
+
+Create funnel analytics.
+
+---
+
+# 49. DATA MODEL
+
+Create a relational database with proper relationships.
+
+Minimum entities:
+
+```text
+users
+profiles
+skills
+user_skills
+
+wants
+offers
+
+organizations
+organization_members
+
+xsects
+xsect_factors
+xsect_paths
+
+crossings
+missed_xsects
+standing_alerts
+
+connections
+connection_requests
+consents
+
+conversations
+messages
+
+events
+event_attendees
+
+introductions
+introduction_requests
+
+reviews
+reputation_events
+
+trust_levels
+verification_states
+
+notifications
+
+subscriptions
+plans
+entitlements
+billing_events
+
+ai_queries
+ai_recommendations
+ai_agents
+
+reports
+blocks
+
+privacy_preferences
+availability_rules
+user_preferences
+```
+
+Use:
+
+* foreign keys
+* indexes
+* pagination
+* status fields
+* timestamps
+* expiration fields
+
+Index heavily on:
+
+* user
+* status
+* category
+* location representation
+* created_at
+* expires_at
+* urgency
+* organization
+* event
+
+---
+
+# 50. API
+
+Build clean APIs.
+
+Examples:
+
+```text
+GET /api/profile
+PATCH /api/profile
+
+GET /api/wants
+POST /api/wants
+PATCH /api/wants/:id
+DELETE /api/wants/:id
+
+GET /api/offers
+POST /api/offers
+
+GET /api/discover
+GET /api/xsects
+GET /api/xsects/:id
+
+GET /api/xsect-radar
+GET /api/xsect-paths
+
+GET /api/missed-xsects
+POST /api/missed-xsects/:id/request
+
+GET /api/alerts
+POST /api/alerts
+
+POST /api/connection-requests
+POST /api/connection-requests/:id/accept
+
+POST /api/consent
+
+GET /api/connections
+
+POST /api/introduction-requests
+
+GET /api/events
+POST /api/events/:id/rsvp
+
+POST /api/ai/intelligence
+POST /api/ai/agent
+
+GET /api/notifications
+
+GET /api/subscription
+POST /api/billing/checkout
+```
+
+---
+
+# 51. SECURITY
+
+Implement:
+
+* authentication
+* authorization
+* server-side ownership checks
+* request validation
+* rate limiting
+* secure location handling
+* privacy enforcement
+* conversation authorization
+* review authorization
+* subscription entitlement checks
+
+Use Zod or equivalent validation.
+
+Never trust client-provided:
+
+* user IDs
+* match IDs
+* review target IDs
+* subscription state
+* permissions
+
+---
+
+# 52. DEMO DATA
+
+Seed a realistic professional network.
+
+Create:
+
+* 150+ users
+* 250+ Wants
+* 250+ Offers
+* 40+ organizations
+* 50+ events
+* 500+ professional relationships
+* 200+ simulated crossings
+* 100+ missed XSECTs
+* 50+ warm introduction paths
+* 30+ urgent opportunities
+
+Use realistic professional contexts.
+
+Industries:
+
+* SaaS
+* AI
+* fintech
+* climate tech
+* healthcare
+* marketing
+* design
+* engineering
+* venture capital
+* consulting
+* e-commerce
+* D2C
+* legal
+* finance
+* manufacturing
+* energy
+
+Cities/areas can include:
+
+* Bengaluru
+* Mumbai
+* Delhi
+* Hyderabad
+* Pune
+* Gurgaon
+
+For Bengaluru demo data include:
+
+* Koramangala
+* Indiranagar
+* HSR
+* Whitefield
+* Bellandur
+* MG Road
+* CBD
+* Electronic City
+
+Never expose exact addresses.
+
+---
+
+# 53. DEMO SIMULATION ENGINE
+
+Create an admin-controlled simulation engine.
+
+Admin can select:
+
+### User A
+
+### User B
+
+### Approximate area
+
+### Timestamp
+
+### Distance band
+
+### Duration
+
+Then:
+
+### Generate XSECT
+
+The system should:
+
+1. create CrossingEvent
+2. evaluate matching signals
+3. calculate XSECT Score
+4. create XSECT
+5. create Missed XSECT if appropriate
+6. trigger standing alerts
+7. generate notification
+8. update analytics
+
+This should make the hackathon demo extremely easy.
+
+---
+
+# 54. DEMO SCENARIO — JOB
+
+User:
+
+> Looking for a growth leadership role.
+
+XSECT discovers:
+
+> Protected Professional / Organization with relevant opportunity.
+
+Explain:
+
+* skill match
+* intent
+* timing
+* location
+* opportunity freshness
+
+Request connection.
+
+---
+
+# 55. DEMO SCENARIO — FOUNDER
+
+Founder Wants:
+
+> Technical cofounder.
+
+XSECT finds complementary Offer:
+
+> Senior engineer open to startup collaboration.
+
+Show:
+
+> **Intent XSECT — 94**
+
+---
+
+# 56. DEMO SCENARIO — MISSED XSECT
+
+Two users cross physically.
+
+Neither connects.
+
+Later:
+
+> **You missed an XSECT.**
+
+Show:
+
+* approximate area
+* time
+* compatibility
+* protected identity
+* active opportunity
+
+Request connection.
+
+---
+
+# 57. DEMO SCENARIO — WARM INTRODUCTION
+
+User asks:
+
+> Find me a path to US enterprise buyers.
+
+XSECT:
+
+> 3 paths found.
+
+Show:
+
+> You → Alex → Sarah → Enterprise Buyer
+
+Request introduction.
+
+---
+
+# 58. DEMO SCENARIO — EVENT
+
+User RSVPs to:
+
+> Bengaluru SaaS Founders Meetup.
+
+XSECT:
+
+> 17 relevant professionals detected.
+
+Then:
+
+> 5 people you should consider meeting.
+
+Show why.
+
+---
+
+# 59. DEMO SCENARIO — AI
+
+User asks:
+
+> Who should I meet this week?
+
+XSECT Intelligence:
+
+> I found 4 high-relevance opportunities.
+
+Each has:
+
+* XSECT Score
+* reason
+* path
+* opportunity
+* timing
+* privacy state
+
+---
+
+# 60. DEMO SCENARIO — PAYWALL
+
+Free user:
+
+> Ask XSECT Intelligence.
+
+Paywall appears.
+
+User chooses:
+
+> XSECT Pro
+
+Mock checkout completes.
+
+Entitlement changes.
+
+AI unlocks immediately.
+
+---
+
+# 61. DEMO SCENARIO — REPEATED CROSSING
+
+Simulate:
+
+User A + User B crossing 4 times.
+
+XSECT:
+
+> **You keep crossing paths.**
+
+> 4 XSECTs this month.
+
+If their professional intents align:
+
+> **There may be a reason to connect.**
+
+Do not reveal identity until consent.
+
+---
+
+# 62. XSECT MOMENT FEED
+
+Create a beautiful feed:
+
+### XSECT MOMENTS
+
+Examples:
+
+> You almost met a potential collaborator.
+
+> Someone nearby needs exactly what you offer.
+
+> Your network has a path to a founder you want to meet.
+
+> Someone attending your event matches your current goal.
+
+> An opportunity relevant to you expires tonight.
+
+Make this feel like professional serendipity.
+
+---
+
+# 63. EMPTY STATES
+
+Never show dead screens.
+
+No matches:
+
+> Your XSECT Radar is quiet.
+
+Then:
+
+> Add another Want or Offer to increase your opportunity surface.
+
+No nearby opportunities:
+
+> Nothing relevant is crossing your path right now.
+
+Offer:
+
+> Expand your radius.
+
+No network path:
+
+> We couldn't find a direct path yet.
+
+Offer:
+
+> Create a new Want and let XSECT keep looking.
+
+---
+
+# 64. AI SAFETY / ACCURACY
+
+The AI must:
+
+* only use available application data
+* never invent people
+* never invent relationships
+* never invent opportunities
+* clearly distinguish simulated data
+* explain uncertainty
+* respect privacy controls
+* never reveal protected identity
+* never reveal exact location
+* never expose private connections
+
+If the system does not know:
+
+> I couldn't find a verified path in your current XSECT network.
+
+Do not fabricate an answer.
+
+---
+
+# 65. PERFORMANCE
+
+Optimize:
+
+* database queries
+* indexes
+* caching
+* pagination
+* image optimization
+* API payloads
+* lazy loading
+* graph queries
+
+Never load the entire network into the browser.
+
+---
+
+# 66. MOBILE EXPERIENCE
+
+Mobile is primary.
+
+Support:
+
+* 360px
+* 390px
+* 430px
+* tablet
+* desktop
+
+Mobile:
+
+* bottom navigation
+* swipeable XSECT cards where appropriate
+* map/radar optimized for touch
+* bottom sheets
+* native-feeling transitions
+
+Desktop:
+
+* dashboard
+* sidebar
+* multi-column intelligence views
+* graph visualization
+
+---
+
+# 67. ANIMATION
+
+Use animation strategically.
+
+Examples:
+
+* X logo paths crossing on loading
+* XSECT card reveal
+* radar pulse
+* connection state transitions
+* consent reveal
+* graph path animation
+* paywall entrance
+* notification transitions
+
+Do not over-animate.
+
+---
+
+# 68. LANDING PAGE
+
+Build a high-end landing page.
+
+Hero:
+
+# XSECT
+
+## Your next opportunity is already on your path.
+
+Subheading:
+
+> People cross paths every day. Most opportunities disappear with them.
+
+> XSECT uses professional intent, proximity, timing and network connections to surface the opportunities hiding inside those intersections.
+
+CTA:
+
+### Explore XSECT
+
+Secondary:
+
+### See how it works
+
+---
+
+# 69. LANDING PAGE SECTIONS
+
+## How XSECT Works
+
+1. Define what you Want.
+2. Define what you Offer.
+3. XSECT finds meaningful intersections.
+4. Discover the opportunity.
+5. Connect only when both sides consent.
+
+---
+
+## XSECT RADAR
+
+Show a cinematic visualization.
+
+---
+
+## XSECT MISSED
+
+> The opportunity you almost missed.
+
+---
+
+## XSECT PATHS
+
+> Find the path between you and the opportunity.
+
+---
+
+## XSECT INTELLIGENCE
+
+> Ask XSECT who you should meet.
+
+---
+
+## Privacy
+
+> Discover without exposing yourself.
+
+---
+
+## Pricing
+
+Free / Pro / Pro+
+
+---
+
+# 70. LANDING PAGE PRIVACY MESSAGE
+
+Strong message:
+
+> **You don't need to reveal yourself to discover an opportunity.**
+
+Show:
+
+Protected:
+
+* identity
+* photo
+* contact
+* exact location
+
+Revealed after:
+
+> **Mutual consent**
+
+---
+
+# 71. PRODUCT MICROCOPY
+
+Prefer:
+
+> XSECT detected
+
+over:
+
+> Match found
+
+Prefer:
+
+> You almost XSECTed
+
+over:
+
+> Missed connection
+
+Prefer:
+
+> Find a path
+
+over:
+
+> Find contact
+
+Prefer:
+
+> Request connection
+
+over:
+
+> Message
+
+Prefer:
+
+> Opportunity
+
+over:
+
+> User
+
+The language should make the product feel distinct.
+
+---
+
+# 72. ADMIN DEMO CONTROLS
+
+Admin should be able to:
+
+* create demo users
+* generate Wants
+* generate Offers
+* create simulated crossings
+* create events
+* generate network relationships
+* generate XSECTs
+* modify subscription
+* trigger notifications
+* reset demo state
+
+Include a:
+
+### Reset Demo
+
+button.
+
+---
+
+# 73. IMPORTANT PRODUCT PRINCIPLE
+
+Do not build disconnected fake pages.
+
+Every important workflow must have real state transitions.
+
+The following must work end-to-end:
+
+```text
+Signup
+→ Profile
+→ Want
+→ Offer
+→ Matching
+→ XSECT
+→ Request
+→ Mutual Consent
+→ Identity Reveal
+→ Connection
+→ Chat
+→ Review
+→ Reputation
+```
+
+Also:
+
+```text
+Crossing
+→ XSECT
+→ Missed XSECT
+→ Request
+→ Consent
+→ Connection
+```
+
+Also:
+
+```text
+Want
+→ XSECT Intelligence
+→ Opportunity
+→ Network Path
+→ Introduction
+```
+
+Also:
+
+```text
+Event
+→ Event XSECT
+→ Recommended People
+→ Request
+→ Consent
+```
+
+Also:
+
+```text
+Free
+→ Paywall
+→ Checkout
+→ Pro
+→ Premium Entitlements
+```
+
+---
+
+# 74. REAL VS SIMULATED
+
+Clearly distinguish:
+
+### REAL
+
+* authentication
+* database
+* profiles
+* Wants
+* Offers
+* matching
+* privacy
+* consent
+* connections
+* chat
+* reviews
+* subscriptions/entitlements
+* AI recommendations based on database data
+* admin analytics
+
+### SIMULATED
+
+* background GPS
+* live location
+* WebSockets if not implemented
+* real-world physical crossing detection
+* demo verification
+* seeded professional relationships
+* simulated event attendance
+
+Never present simulated capabilities as real.
+
+---
+
+# 75. TECHNICAL ARCHITECTURE
+
+Use a modern full-stack architecture.
+
+Recommended:
+
+Frontend:
+
+* React / Next.js or equivalent
+* TypeScript
+* responsive design
+* Tailwind or equivalent
+
+Backend:
+
+* Node.js / TypeScript
+* REST or typed API
+* PostgreSQL
+
+ORM:
+
+* Drizzle or Prisma
+
+Authentication:
+
+* Clerk
+
+AI:
+
+* OpenAI API
+
+Maps:
+
+* Google Maps / Places or equivalent
+
+Storage:
+
+* object storage for profile images
+
+Notifications:
+
+* email/push abstraction
+
+Billing:
+
+* billing provider abstraction
+* mock checkout for hackathon
+
+Do not hard-code provider-specific business logic into the core product.
+
+---
+
+# 76. DATABASE SECURITY
+
+Use server-side access control.
+
+Every query involving private data must verify:
+
+```text
+authenticated user
++
+resource ownership
++
+relationship authorization
++
+privacy authorization
+```
+
+Do not depend on route-level protection alone.
+
+---
+
+# 77. XSECT GRAPH
+
+The graph should support:
+
+```text
+User
+ ├── Wants
+ ├── Offers
+ ├── Skills
+ ├── Organizations
+ ├── Connections
+ ├── Events
+ ├── Crossings
+ └── Reputation
+
+Opportunity
+ ├── Want
+ ├── Offer
+ ├── User
+ ├── Organization
+ ├── Event
+ ├── Location
+ └── Time
+
+Path
+ User
+  ↓
+ Connection
+  ↓
+ Person
+  ↓
+ Organization
+  ↓
+ Opportunity
+```
+
+Use this graph for AI reasoning.
+
+---
+
+# 78. FUTURE-READY ARCHITECTURE
+
+Design for future:
+
+* real background location
+* geofencing
+* mobile native apps
+* push notifications
+* LinkedIn integration
+* GitHub integration
+* calendar integration
+* event platforms
+* organization verification
+* employment verification
+* recruiter workflows
+* enterprise networking
+* API access
+* third-party event integrations
+
+Do not implement these unless required, but don't architect the MVP in a way that prevents them.
+
+---
+
+# 79. HACKATHON WOW MOMENT
+
+The flagship demo should be:
+
+User enters:
+
+> **I want an introduction to US enterprise solar companies.**
+
+XSECT Intelligence analyzes:
+
+* Wants
+* Offers
+* skills
+* organizations
+* professional network
+* events
+* recent XSECTs
+* approximate proximity
+* time
+* trust
+
+Then:
+
+# 4 PATHS FOUND
+
+### PATH 01 — XSECT SCORE 94
+
+You
+↓
+Protected Professional #284
+↓
+Energy Founder
+↓
+Enterprise Buyer
+
+Then:
+
+> **You almost crossed Professional #284 yesterday.**
+
+Then:
+
+> **They are attending the same event tomorrow.**
+
+Then:
+
+> **A mutual introduction path is available.**
+
+User clicks:
+
+### Request Introduction
+
+The system sends the intermediary the request.
+
+The intermediary accepts.
+
+Both sides consent.
+
+Identity reveals.
+
+Chat opens.
+
+That should be the moment where the judge understands:
+
+> **“This isn't LinkedIn. This is a new opportunity layer around the professional world.”**
+
+---
+
+# 80. FINAL QUALITY BAR
+
+After building everything:
+
+### TEST
+
+Every core workflow.
+
+### AUDIT
+
+Privacy leaks.
+
+### AUDIT
+
+Authorization.
+
+### AUDIT
+
+Subscription entitlement.
+
+### AUDIT
+
+AI hallucinations.
+
+### AUDIT
+
+Mobile UI.
+
+### AUDIT
+
+Database integrity.
+
+### AUDIT
+
+Demo state.
+
+### POLISH
+
+Typography.
+
+### POLISH
+
+Animations.
+
+### POLISH
+
+Loading states.
+
+### POLISH
+
+Empty states.
+
+### POLISH
+
+Error handling.
+
+### POLISH
+
+Navigation.
+
+### POLISH
+
+Paywall.
+
+### POLISH
+
+XSECT visual identity.
+
+Do not stop after creating screens.
+
+The product must feel connected and alive.
+
+---
+
+# FINAL BRAND
+
+# XSECT
+
+## Your next opportunity is already on your path.
+
+### Where professional paths, people and opportunities intersect.
+
+Core navigation:
+
+**Radar · Discover · XSECTs · Network · AI · Profile**
+
+Core product primitives:
+
+**XSECT · XSECT Radar · XSECT Paths · XSECT Intelligence · XSECT Moments · XSECT Missed · XSECT Bridge · XSECT Events · XSECT Pro**
+
+Build XSECT as if it is being launched as a serious startup, not as a hackathon demo.
+
+Prioritize functional depth, privacy correctness, interconnected workflows and a distinctive product experience over superficial feature count.

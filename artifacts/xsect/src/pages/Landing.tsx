@@ -6,21 +6,26 @@ const publicAsset = (path: string) => `${import.meta.env.BASE_URL}${path.replace
 export default function Landing() {
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background selection:bg-primary/20" data-testid="page-landing">
-      <header className="px-6 md:px-12 py-5 flex justify-between items-center border-b border-border bg-background/95 backdrop-blur-md sticky top-0 z-50">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-foreground rounded-md flex items-center justify-center shadow-sm">
-            <span className="text-background font-bold font-sans text-sm tracking-tighter">XS</span>
+      <header className="px-6 md:px-12 py-4 flex justify-between items-center border-b border-white/10 bg-[#0b1018]/85 backdrop-blur-xl sticky top-0 z-50 text-white" data-testid="header-landing">
+        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" aria-hidden="true" />
+        <Link href="/" className="flex items-center gap-3 group" data-testid="link-home">
+          <div className="relative w-9 h-9 rounded-lg bg-gradient-to-br from-primary via-[#ff7a45] to-[#c2410c] flex items-center justify-center shadow-[0_0_24px_-4px_hsl(var(--primary)/0.8)] ring-1 ring-white/20 group-hover:shadow-[0_0_32px_-4px_hsl(var(--primary))] transition-shadow">
+            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="white" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true">
+              <path d="M5 5l14 14" />
+              <path d="M19 5L5 19" className="opacity-60" />
+            </svg>
           </div>
-          <span className="font-sans font-bold text-xl tracking-tight text-foreground">
-            XSECT
-          </span>
-        </div>
-        <div className="flex items-center gap-6">
-          <Link href="/sign-in" data-testid="link-sign-in" className="text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors">
+          <div className="flex flex-col leading-none">
+            <span className="font-sans font-bold text-xl tracking-[0.18em]">XSECT</span>
+            <span className="font-mono-custom text-[9px] uppercase tracking-[0.3em] text-white/45 mt-1 hidden sm:block">Opportunity Network</span>
+          </div>
+        </Link>
+        <div className="flex items-center gap-2 sm:gap-4">
+          <Link href="/sign-in" data-testid="link-sign-in" className="text-sm font-semibold text-white/70 hover:text-white px-3 py-2.5 rounded-md hover:bg-white/5 transition-colors whitespace-nowrap">
             Sign In
           </Link>
-          <Link href="/sign-up" data-testid="link-sign-up" className="text-sm font-semibold bg-foreground text-background px-5 py-2.5 rounded-md hover:bg-foreground/90 transition-all shadow-sm flex items-center gap-2">
-            Request Access <ArrowRight size={16} />
+          <Link href="/sign-up" data-testid="link-sign-up" className="text-sm font-semibold bg-primary text-primary-foreground px-4 sm:px-5 py-2.5 rounded-md hover:bg-primary/90 transition-all shadow-[0_8px_24px_-8px_hsl(var(--primary)/0.9)] hover:-translate-y-0.5 flex items-center gap-2 whitespace-nowrap">
+            <span className="sm:hidden">Join</span><span className="hidden sm:inline">Request Access</span> <ArrowRight size={16} />
           </Link>
         </div>
       </header>
