@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "t-9P7YxUtyJdb-kszRZ1A"
+uri = "file://exports/xsect-codebase.zip"
+type = "unspecified"
+title = "XSECT Codebase"
+description = "Complete source-only XSECT workspace, excluding dependencies, build outputs, internal Replit tooling, uploaded assets, and secret files."
+logical_id = "dfd8aebb-0da8-42b6-b37f-32cc4036abb8"
+content_hash = "sha256:388e47b28b23cd8adb30a78b0c11522356d703bcd18641575c6dba6dded21559"
+size = 4261517
+mtime_ms = 1789817159982
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:964a3d8c-5755-4ab4-a01a-478e88ca4b8a/dfd8aebb-0da8-42b6-b37f-32cc4036abb8/5deb21d3-1c5f-478e-813c-7c27be049c3f"
+storage_version_token = "1789817168066049"
+content_type = "application/octet-stream"
