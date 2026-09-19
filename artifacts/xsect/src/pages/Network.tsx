@@ -1,86 +1,150 @@
-import { useStore } from '../store';
-import { ShieldCheck, Search } from 'lucide-react';
-import { useState } from 'react';
-
-const NETWORK_MOCK = [
-  { id: '4', name: 'Alex Rivera', role: 'Staff Product Designer', intent: 'Looking for a senior IC role at a Series C+ company', status: 'unlocked' },
-  { id: '5', name: 'Taylor Swift', role: 'VP Engineering', intent: 'Building an early team for a fintech spinout', status: 'unlocked' },
-  { id: '6', name: 'Protected Professional', role: 'Senior Software Engineer', intent: 'Exploring AI infrastructure opportunities', status: 'pending' },
-];
+import { useMemo, useState } from 'react';
+import { Link } from 'wouter';
+import { useUser } from '@clerk/react';
+import { Check, MessageCircle, Search, ShieldCheck, UserRound, X, Ban } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { useActivity } from '../lib/activity';
 
 export default function NetworkPage() {
-  const { state, acceptConnection } = useStore();
+  const { user } = useUser();
+  const { toast } = useToast();
+  const activity = useActivity(user?.id);
   const [search, setSearch] = useState('');
-  
+  const connections = activity.snapshot.connections.filter((connection) => connection.status !== 'declined' && connection.status !== 'blocked');
+  const filtered = useMemo(() => connections.filter((connection) =>
+    `${connection.name} ${connection.role} ${connection.intent}`.toLowerCase().includes(search.toLowerCase()),
+  ), [connections, search]);
+  const incoming = filtered.filter((connection) => connection.status === 'incoming');
+  const outgoing = filtered.filter((connection) => connection.status === 'outgoing');
+  const accepted = filtered.filter((connection) => connection.status === 'accepted');
+
+  const notify = (title: string, description: string) => toast({ title, description });
+
   return (
     <div className="p-6 md:p-10 max-w-5xl mx-auto h-full">
       <header className="mb-10">
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-4">Your Network</h1>
-        <div className="relative max-w-md">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <input 
-            type="text" 
-            placeholder="Search active connections..." 
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-sm"
-          />
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-5">
+          <div>
+            <p className="text-xs font-mono-custom uppercase tracking-widest text-primary font-semibold mb-3">Consent layer</p>
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-3">Your network</h1>
+            <p className="text-sm text-muted-foreground max-w-xl">Identity stays protected until both people agree. Every connection action can be reversed.</p>
+          </div>
+          <div className="relative w-full md:w-72">
+            <Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="search"
+              aria-label="Search network"
+              placeholder="Search connections"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-sm"
+            />
+          </div>
         </div>
       </header>
 
-      <div className="space-y-8">
+      <div className="space-y-10">
         <section>
-          <h2 className="text-lg font-bold text-foreground mb-4 pb-2 border-b border-border flex justify-between items-end">
-            Pending Requests <span className="bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full">1</span>
-          </h2>
-          <div className="grid gap-4">
-            {NETWORK_MOCK.filter(n => n.status === 'pending').map(person => (
-              <div key={person.id} className="bg-white border border-border p-5 rounded-xl flex items-center justify-between shadow-sm">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <ShieldCheck size={14} className="text-primary" />
-                    <span className="font-bold text-foreground">{person.role}</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground font-medium">"{person.intent}"</p>
-                </div>
-                <div className="flex gap-2">
-                  <button className="px-4 py-2 text-sm font-bold text-muted-foreground hover:bg-secondary rounded-lg transition-colors">Ignore</button>
-                  <button 
-                    onClick={() => acceptConnection(person.id)}
-                    className="px-4 py-2 bg-foreground text-background text-sm font-bold rounded-lg hover:bg-foreground/90 transition-colors"
-                  >
-                    Accept & Reveal
-                  </button>
-                </div>
-              </div>
-            ))}
+          <div className="flex items-center justify-between border-b border-border pb-3 mb-4">
+            <h2 className="text-lg font-bold text-foreground">Incoming requests</h2>
+            <span className="bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full">{incoming.length}</span>
           </div>
+          {incoming.length === 0 ? (
+            <EmptyState title="No pending requests" text="When someone wants to connect, their protected signal will appear here." />
+          ) : (
+            <div className="grid gap-4">
+              {incoming.map((person) => (
+                <div key={person.id} className="bg-white border border-border p-5 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-sm">
+                  <div className="flex gap-4">
+                    <div className="w-11 h-11 rounded-full bg-secondary border border-border flex items-center justify-center shrink-0">
+                      <ShieldCheck size={18} className="text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wider font-mono-custom text-muted-foreground mb-1">Protected signal</p>
+                      <p className="font-bold text-foreground">{person.role}</p>
+                      <p className="text-sm text-muted-foreground mt-1">“{person.intent}”</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 md:shrink-0">
+                    <button onClick={() => { activity.declineConnection(person.id); notify('Request declined', 'The signal has been removed from your queue.'); }} className="px-3 py-2 text-sm font-bold text-muted-foreground hover:bg-secondary rounded-lg transition-colors flex items-center gap-1.5">
+                      <X size={15} /> Decline
+                    </button>
+                    <button onClick={() => { activity.acceptConnection(person.id); notify('Connection accepted', 'Identity is now revealed and messaging is available.'); }} className="px-4 py-2 bg-foreground text-background text-sm font-bold rounded-lg hover:bg-foreground/90 transition-colors flex items-center gap-1.5">
+                      <Check size={15} /> Accept & reveal
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
-        <section>
-          <h2 className="text-lg font-bold text-foreground mb-4 pb-2 border-b border-border">
-            Active Connections
-          </h2>
-          <div className="grid md:grid-cols-2 gap-4">
-            {NETWORK_MOCK.filter(n => n.status === 'unlocked' || state.unlockedIdentities.includes(n.id)).map(person => (
-              <div key={person.id} className="bg-white border border-border p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 bg-secondary border border-border rounded-full flex items-center justify-center font-bold text-lg text-foreground">
-                    {person.name.charAt(0)}
-                  </div>
+        {outgoing.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between border-b border-border pb-3 mb-4">
+              <h2 className="text-lg font-bold text-foreground">Awaiting response</h2>
+              <span className="text-xs font-mono-custom text-muted-foreground">{outgoing.length} protected</span>
+            </div>
+            <div className="grid gap-3">
+              {outgoing.map((person) => (
+                <div key={person.id} className="bg-white border border-border p-4 rounded-xl flex items-center justify-between gap-4">
                   <div>
-                    <h3 className="font-bold text-foreground">{person.name}</h3>
-                    <p className="text-xs font-mono-custom text-muted-foreground">{person.role}</p>
+                    <p className="font-bold text-foreground">{person.role}</p>
+                    <p className="text-sm text-muted-foreground">Request sent. Names remain hidden until accepted.</p>
+                  </div>
+                  <button onClick={() => { activity.declineConnection(person.id); notify('Request withdrawn', 'You can send a new request later.'); }} className="text-sm font-semibold text-muted-foreground hover:text-foreground">Withdraw</button>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <section>
+          <div className="flex items-center justify-between border-b border-border pb-3 mb-4">
+            <h2 className="text-lg font-bold text-foreground">Accepted connections</h2>
+            <span className="text-xs font-mono-custom text-muted-foreground">{accepted.length} revealed</span>
+          </div>
+          {accepted.length === 0 ? (
+            <EmptyState title="Your accepted network is empty" text="Accept a request or send one from Discover to start a conversation." />
+          ) : (
+            <div className="grid md:grid-cols-2 gap-4">
+              {accepted.map((person) => (
+                <div key={person.id} className="bg-white border border-border p-5 rounded-xl shadow-sm">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-secondary border border-border rounded-full flex items-center justify-center font-bold text-lg text-foreground">
+                      {person.name.charAt(0)}
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-foreground truncate">{person.name}</h3>
+                      <p className="text-xs font-mono-custom text-muted-foreground truncate">{person.role}</p>
+                    </div>
+                    <UserRound size={16} className="ml-auto text-emerald-600" />
+                  </div>
+                  <p className="text-sm text-foreground font-medium bg-secondary p-3 rounded-lg line-clamp-2 mb-4">“{person.intent}”</p>
+                  <div className="flex items-center justify-between">
+                    <button onClick={() => { activity.blockConnection(person.id); notify('Connection blocked', 'This person can no longer message or request a reveal.'); }} className="text-xs font-semibold text-muted-foreground hover:text-destructive flex items-center gap-1">
+                      <Ban size={13} /> Block
+                    </button>
+                    <Link href={`/messages?thread=${person.id}`} className="text-sm font-bold text-primary hover:text-primary/80 flex items-center gap-1.5">
+                      <MessageCircle size={15} /> Message
+                    </Link>
                   </div>
                 </div>
-                <p className="text-sm text-foreground font-medium bg-secondary p-3 rounded-lg line-clamp-2">
-                  "{person.intent}"
-                </p>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
       </div>
+    </div>
+  );
+}
+
+function EmptyState({ title, text }: { title: string; text: string }) {
+  return (
+    <div className="bg-white border border-dashed border-border rounded-xl px-6 py-10 text-center">
+      <ShieldCheck size={24} className="mx-auto text-muted-foreground mb-3" />
+      <p className="font-bold text-foreground">{title}</p>
+      <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">{text}</p>
     </div>
   );
 }
