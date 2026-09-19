@@ -3,8 +3,8 @@ import { index, jsonb, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-or
 export const analyticsEventName = [
   "signup", "profile_completed", "want_created", "offer_created", "xsect_created", "xsect_viewed", "request_sent", "request_accepted",
   "mutual_consent", "connection_created", "chat_started", "crossing_created", "missed_xsect_viewed", "standing_alert_created",
-  "introduction_requested", "introduction_accepted", "event_rsvp", "ai_query", "ai_recommendation", "subscription_viewed",
-  "checkout_started", "subscription_started", "review_submitted", "organization_created", "agent_created", "plan_switched",
+  "introduction_requested", "introduction_accepted", "event_rsvp", "ai_query", "ai_recommendation",
+  "review_submitted", "organization_created", "agent_created", "plan_switched",
 ] as const;
 export type AnalyticsEventName = (typeof analyticsEventName)[number];
 

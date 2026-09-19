@@ -1,11 +1,12 @@
 import { db, planOverridesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import type { NextFunction, Request, Response } from "express";
-import type { XsectPlan } from "../billing";
 import type { AuthenticatedRequest } from "../middlewares/requireAuth";
 
+export type XsectPlan = "free" | "pro" | "pro_plus";
+
 /**
- * Plan-gated capabilities. Trust/verification is NEVER an entitlement — subscription must not affect trust.
+ * Plan-gated capabilities. Trust/verification is NEVER an entitlement — plan access must not affect trust.
  * Free: limited XSECTs per day, basic Radar, limited Missed history, basic Paths.
  * Pro: unlimited XSECTs, full Missed, Standing Alerts, Time XSECTs, full Intelligence, 2-step paths.
  * Pro+: everything in Pro + Opportunity Map, Event XSECT mode, AI Agent, Professional Twin auto-refresh, priority visibility, multi-step paths.

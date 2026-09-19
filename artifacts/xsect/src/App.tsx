@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect, useRef } from 'react';
-import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -7,7 +7,6 @@ import { Route, Switch, useLocation, Router as WouterRouter, Redirect } from 'wo
 import { ClerkProvider, SignIn, SignUp, Show, useClerk, useUser } from '@clerk/react';
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
-import { getGetBillingSubscriptionQueryKey, useGetBillingSubscription } from '@workspace/api-client-react';
 
 import { StoreProvider, useStore } from './store';
 import Shell from './components/Shell';
@@ -134,29 +133,31 @@ function ClerkQueryClientCacheInvalidator() {
   return null;
 }
 
-function BillingStateSynchronizer() {
+export const accessPlanQueryKey = ['access-plan'] as const;
+
+function PlanAccessSynchronizer() {
   const { isSignedIn } = useUser();
-  const { syncBilling } = useStore();
-  const { data } = useGetBillingSubscription({
-    query: {
-      queryKey: getGetBillingSubscriptionQueryKey(),
-      enabled: Boolean(isSignedIn),
-      staleTime: 30_000,
-      refetchOnWindowFocus: true,
+  const { syncPlanAccess } = useStore();
+  const { data } = useQuery({
+    queryKey: accessPlanQueryKey,
+    enabled: Boolean(isSignedIn),
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
+    queryFn: async () => {
+      const response = await fetch('/api/access/plan', { credentials: 'include' });
+      if (!response.ok) throw new Error('Unable to load plan access.');
+      return response.json() as Promise<{ plan: 'free' | 'pro' | 'pro_plus'; source: 'free' | 'override'; entitlements: string[] }>;
     },
   });
 
   useEffect(() => {
     if (!data) return;
-    syncBilling({
+    syncPlanAccess({
       plan: data.plan,
-      billingCycle: data.billingCycle,
-      billingStatus: data.status,
-      currentPeriodEnd: data.currentPeriodEnd,
-      cancelAtPeriodEnd: data.cancelAtPeriodEnd,
+      planSource: data.source,
       entitlements: data.entitlements,
     });
-  }, [data, syncBilling]);
+  }, [data, syncPlanAccess]);
 
   return null;
 }
@@ -266,7 +267,7 @@ function ClerkProviderWithRoutes() {
         <ClerkQueryClientCacheInvalidator />
         <TooltipProvider>
           <StoreProvider>
-            <BillingStateSynchronizer />
+            <PlanAccessSynchronizer />
             <RoutedErrorBoundary>
               <div className="min-h-[100dvh] w-full text-foreground bg-background font-sans selection:bg-primary/20 selection:text-primary">
                 <AppRoutes />

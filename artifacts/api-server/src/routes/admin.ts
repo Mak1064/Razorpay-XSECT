@@ -43,7 +43,7 @@ router.post("/admin/bootstrap", async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
-router.post("/billing-demo/plan", async (req, res, next) => {
+router.post("/access/plan", async (req, res, next) => {
   try {
     if (process.env.DEMO_PLAN_SWITCH === "false") return bad(res, "Demo plan switching is disabled.", 403);
     const parsed = planSchema.safeParse(req.body?.plan);
@@ -56,7 +56,7 @@ router.post("/billing-demo/plan", async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
-const clientEvents = new Set(["xsect_viewed", "missed_xsect_viewed", "subscription_viewed", "checkout_started"]);
+const clientEvents = new Set(["xsect_viewed", "missed_xsect_viewed"]);
 router.post("/analytics/events", async (req, res, next) => {
   try {
     if (!clientEvents.has(req.body?.name)) return bad(res, "Event name is not allowed.");
@@ -252,7 +252,7 @@ router.get("/admin/analytics/funnel", async (req, res, next) => {
   try {
     const days = Math.min(365, Math.max(1, Number(req.query.days) || 30));
     const since = new Date(Date.now() - days * 86400000);
-    const steps = ["signup", "profile_completed", "want_created", "offer_created", "xsect_created", "request_sent", "request_accepted", "chat_started", "subscription_started"] as const;
+    const steps = ["signup", "profile_completed", "want_created", "offer_created", "xsect_created", "request_sent", "request_accepted", "chat_started"] as const;
     const grouped = await db.select({ name: analyticsEventsTable.name, value: sql<number>`count(distinct ${analyticsEventsTable.userId})` })
       .from(analyticsEventsTable).where(and(gte(analyticsEventsTable.createdAt, since), inArray(analyticsEventsTable.name, [...steps]))).groupBy(analyticsEventsTable.name);
     const values = new Map(grouped.map((row) => [row.name, Number(row.value)]));

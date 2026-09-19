@@ -1,6 +1,5 @@
 import { Check, Sparkles, Workflow } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { getGetBillingSubscriptionQueryKey } from '@workspace/api-client-react';
 import { useToast } from '@/hooks/use-toast';
 import { adminMeQueryKey, type Plan } from '../hooks/use-admin';
 import { useStore } from '../store';
@@ -35,7 +34,7 @@ export default function Plans() {
   const queryClient = useQueryClient();
   const demoSwitch = useMutation({
     mutationFn: async (plan: Plan) => {
-      const response = await fetch('/api/billing-demo/plan', {
+      const response = await fetch('/api/access/plan', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -46,7 +45,7 @@ export default function Plans() {
     },
     onSuccess: async () => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: getGetBillingSubscriptionQueryKey() }),
+        queryClient.invalidateQueries({ queryKey: ['access-plan'] }),
         queryClient.invalidateQueries({ queryKey: adminMeQueryKey }),
       ]);
       toast({ title: 'Plan switched', description: 'Your feature access now follows the selected demo plan.' });
@@ -58,7 +57,7 @@ export default function Plans() {
     <div className="p-6 md:p-10 max-w-6xl mx-auto">
       <header className="mb-10 text-center max-w-2xl mx-auto">
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">Choose your signal level.</h1>
-        <p className="text-lg text-muted-foreground">Payments are disabled. Switch plans here to preview and test every entitlement.</p>
+        <p className="text-lg text-muted-foreground">Switch access levels here to preview and test every entitlement.</p>
       </header>
       <section className="mb-10 bg-amber-50 border border-amber-200 rounded-2xl p-5 text-center">
         <p className="text-xs font-mono-custom uppercase tracking-widest text-amber-800 font-semibold mb-3">Demo access</p>

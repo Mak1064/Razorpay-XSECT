@@ -317,7 +317,7 @@ export async function seedActivity(): Promise<void> {
   await db.execute(sql`update missed_xsects set status = case when mod(abs(hashtext(id::text)), 18)=0 then 'requested'::missed_xsect_status when mod(abs(hashtext(id::text)), 31)=0 then 'connected'::missed_xsect_status when mod(abs(hashtext(id::text)), 11)=0 then 'dismissed'::missed_xsect_status else status end where user_id like 'seed\_%' escape '\'`);
   const funnel: Array<[typeof analyticsEventsTable.$inferInsert.name, number]> = [
     ["signup", 160], ["profile_completed", 153], ["want_created", 310], ["offer_created", 340],
-    ["xsect_created", 520], ["request_sent", 118], ["request_accepted", 79], ["chat_started", 61], ["subscription_started", 44],
+    ["xsect_created", 520], ["request_sent", 118], ["request_accepted", 79], ["chat_started", 61],
   ];
   for (const [name, count] of funnel) {
     await db.insert(analyticsEventsTable).values(Array.from({ length: count }, (_, index) => ({ userId: ids[index % USER_COUNT]!, name, properties: { source: "seed", simulated: true }, createdAt: daysAgo((index * 7 + name.length) % 30, random, now) })));

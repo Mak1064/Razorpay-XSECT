@@ -17,38 +17,3 @@ export const HealthCheckResponse = zod.object({
 })
 
 
-/**
- * @summary List available demo plans
- */
-export const ListBillingPlansResponse = zod.object({
-  "plans": zod.array(zod.object({
-  "plan": zod.enum(['pro', 'pro_plus']),
-  "name": zod.string(),
-  "description": zod.string(),
-  "prices": zod.object({
-  "monthly": zod.object({
-  "amount": zod.number().int(),
-  "currency": zod.string()
-}),
-  "annual": zod.object({
-  "amount": zod.number().int(),
-  "currency": zod.string()
-})
-})
-}))
-})
-
-
-/**
- * @summary Get the authenticated user's plan and entitlements
- */
-export const GetBillingSubscriptionResponse = zod.object({
-  "plan": zod.enum(['free', 'pro', 'pro_plus']),
-  "billingCycle": zod.enum(['monthly', 'annual']),
-  "status": zod.enum(['free', 'trialing', 'active', 'past_due', 'canceled', 'unpaid', 'incomplete', 'paused']),
-  "currentPeriodEnd": zod.coerce.date().nullable(),
-  "cancelAtPeriodEnd": zod.boolean(),
-  "entitlements": zod.array(zod.string())
-})
-
-

@@ -19,10 +19,7 @@ export interface StoreState {
   
   // Plans
   plan: 'free' | 'pro' | 'pro_plus';
-  billingCycle: 'monthly' | 'annual';
-  billingStatus: 'free' | 'trialing' | 'active' | 'past_due' | 'canceled' | 'unpaid' | 'incomplete' | 'paused' | 'demo_override';
-  currentPeriodEnd: string | null;
-  cancelAtPeriodEnd: boolean;
+  planSource: 'free' | 'override';
   entitlements: string[];
   
   // Geolocation (in-memory)
@@ -39,7 +36,7 @@ interface StoreContextType {
   unlockIdentity: (id: string) => void;
   updateProfile: (profile: Partial<UserProfile>) => void;
   
-  syncBilling: (billing: Pick<StoreState, 'plan' | 'billingCycle' | 'billingStatus' | 'currentPeriodEnd' | 'cancelAtPeriodEnd' | 'entitlements'>) => void;
+  syncPlanAccess: (access: Pick<StoreState, 'plan' | 'planSource' | 'entitlements'>) => void;
   
   // Geolocation
   setLocationTrackingStatus: (status: StoreState['locationTracking'], accuracy?: number | null) => void;
@@ -53,10 +50,7 @@ const initialState: StoreState = {
   connectionsAccepted: [],
   unlockedIdentities: [],
   plan: 'free',
-  billingCycle: 'monthly',
-  billingStatus: 'free',
-  currentPeriodEnd: null,
-  cancelAtPeriodEnd: false,
+  planSource: 'free',
   entitlements: [],
   locationTracking: 'idle',
   locationAccuracy: null
@@ -97,9 +91,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     profile: s.profile ? { ...s.profile, ...profile } : null
   }));
 
-  const syncBilling: StoreContextType['syncBilling'] = useCallback((billing) => setState(s => ({
+  const syncPlanAccess: StoreContextType['syncPlanAccess'] = useCallback((access) => setState(s => ({
     ...s,
-    ...billing,
+    ...access,
   })), []);
 
   const setLocationTrackingStatus = (status: StoreState['locationTracking'], accuracy?: number | null) => setState(s => ({
@@ -112,7 +106,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     <StoreContext.Provider value={{
       state, completeOnboarding, saveOpportunity, 
       requestConnection, acceptConnection, unlockIdentity, 
-      updateProfile, syncBilling, setLocationTrackingStatus
+      updateProfile, syncPlanAccess, setLocationTrackingStatus
     }}>
       {children}
     </StoreContext.Provider>
