@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export type Plan = 'free' | 'pro' | 'pro_plus';
-export type AdminMe = { isAdmin: boolean; plan: Plan; planSource: 'override' | 'stripe' | 'free' };
+export type AdminMe = { isAdmin: boolean; plan: Plan; planSource: 'override' | 'free' };
 export const adminMeQueryKey = ['admin-me'];
 
 async function api<T>(path: string, options?: RequestInit): Promise<T> {

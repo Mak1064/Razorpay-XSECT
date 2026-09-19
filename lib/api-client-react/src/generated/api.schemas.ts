@@ -83,24 +83,3 @@ export type ListBillingPlans200 = {
   plans: BillingPlan[];
 };
 
-export type CreateBillingCheckoutBodyPlan = typeof CreateBillingCheckoutBodyPlan[keyof typeof CreateBillingCheckoutBodyPlan];
-
-
-export const CreateBillingCheckoutBodyPlan = {
-  pro: 'pro',
-  pro_plus: 'pro_plus',
-} as const;
-
-export type CreateBillingCheckoutBodyCycle = typeof CreateBillingCheckoutBodyCycle[keyof typeof CreateBillingCheckoutBodyCycle];
-
-
-export const CreateBillingCheckoutBodyCycle = {
-  monthly: 'monthly',
-  annual: 'annual',
-} as const;
-
-export type CreateBillingCheckoutBody = {
-  plan: CreateBillingCheckoutBodyPlan;
-  cycle: CreateBillingCheckoutBodyCycle;
-};
-

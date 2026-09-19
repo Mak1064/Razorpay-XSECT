@@ -18,7 +18,7 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
- * @summary List purchasable subscription plans
+ * @summary List available demo plans
  */
 export const ListBillingPlansResponse = zod.object({
   "plans": zod.array(zod.object({
@@ -40,7 +40,7 @@ export const ListBillingPlansResponse = zod.object({
 
 
 /**
- * @summary Get the authenticated user's subscription and entitlements
+ * @summary Get the authenticated user's plan and entitlements
  */
 export const GetBillingSubscriptionResponse = zod.object({
   "plan": zod.enum(['free', 'pro', 'pro_plus']),
@@ -49,27 +49,6 @@ export const GetBillingSubscriptionResponse = zod.object({
   "currentPeriodEnd": zod.coerce.date().nullable(),
   "cancelAtPeriodEnd": zod.boolean(),
   "entitlements": zod.array(zod.string())
-})
-
-
-/**
- * @summary Create a Stripe Checkout session
- */
-export const CreateBillingCheckoutBody = zod.object({
-  "plan": zod.enum(['pro', 'pro_plus']),
-  "cycle": zod.enum(['monthly', 'annual'])
-})
-
-export const CreateBillingCheckoutResponse = zod.object({
-  "url": zod.string().url()
-})
-
-
-/**
- * @summary Create a Stripe customer portal session
- */
-export const CreateBillingPortalResponse = zod.object({
-  "url": zod.string().url()
 })
 
 

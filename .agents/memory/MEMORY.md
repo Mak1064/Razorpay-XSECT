@@ -1,2 +1,3 @@
 - [Stripe sync bundling](stripe-sync-bundling.md) — keep stripe-replit-sync external to the API bundle so its packaged migrations remain available at runtime.
 - [Parallel build conventions](parallel-build-conventions.md) — pre-scaffold shared files, one route file per stream, all scoring via the XsectEngine contract; rebuild db types with tsc -b.
+- [Plan access without payments](plan-access-without-payments.md) — XSECT uses persistent demo plan overrides only; do not reintroduce payment-provider runtime dependencies without explicit approval.

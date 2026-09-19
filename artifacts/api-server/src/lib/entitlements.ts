@@ -1,7 +1,7 @@
 import { db, planOverridesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import type { NextFunction, Request, Response } from "express";
-import { getSubscriptionForUser, type XsectPlan } from "../billing";
+import type { XsectPlan } from "../billing";
 import type { AuthenticatedRequest } from "../middlewares/requireAuth";
 
 /**
@@ -22,20 +22,13 @@ export const PLAN_ENTITLEMENTS: Record<XsectPlan, Entitlement[]> = {
 
 export const FREE_LIMITS = { xsectsPerDay: 5, missedHistoryDays: 7, intelligenceQueriesPerDay: 3, pathResults: 3 } as const;
 
-export type EffectivePlan = { plan: XsectPlan; source: "override" | "stripe" | "free"; entitlements: Entitlement[] };
+export type EffectivePlan = { plan: XsectPlan; source: "override" | "free"; entitlements: Entitlement[] };
 
-/** Resolve the effective plan: demo override (admin-set) wins, then Stripe subscription. */
+/** Resolve the effective plan from an admin-set demo override, otherwise free. */
 export async function getEffectivePlan(userId: string): Promise<EffectivePlan> {
   const override = (await db.select().from(planOverridesTable).where(eq(planOverridesTable.userId, userId)).limit(1))[0];
   if (override) return { plan: override.plan, source: "override", entitlements: PLAN_ENTITLEMENTS[override.plan] };
-  try {
-    const subscription = await getSubscriptionForUser(userId);
-    const plan: XsectPlan = subscription.plan === "pro" || subscription.plan === "pro_plus" ? subscription.plan : "free";
-    return { plan, source: plan === "free" ? "free" : "stripe", entitlements: PLAN_ENTITLEMENTS[plan] };
-  } catch (error) {
-    console.error("getEffectivePlan: stripe lookup failed, defaulting to free", error);
-    return { plan: "free", source: "free", entitlements: [] };
-  }
+  return { plan: "free", source: "free", entitlements: [] };
 }
 
 export async function hasEntitlement(userId: string, entitlement: Entitlement): Promise<boolean> {

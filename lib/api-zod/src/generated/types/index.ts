@@ -15,8 +15,5 @@ export * from './billingSubscription';
 export * from './billingSubscriptionBillingCycle';
 export * from './billingSubscriptionPlan';
 export * from './billingSubscriptionStatus';
-export * from './createBillingCheckoutBody';
-export * from './createBillingCheckoutBodyCycle';
-export * from './createBillingCheckoutBodyPlan';
 export * from './healthStatus';
 export * from './listBillingPlans200';

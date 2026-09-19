@@ -11,7 +11,7 @@ tags:
   - name: health
     description: Health operations
   - name: billing
-    description: Subscription billing and entitlements
+    description: Plan access and entitlements
 paths:
   /healthz:
     get:
@@ -30,7 +30,7 @@ paths:
     get:
       operationId: listBillingPlans
       tags: [billing]
-      summary: List purchasable subscription plans
+      summary: List available demo plans
       responses:
         "200":
           description: Available billing plans
@@ -48,7 +48,7 @@ paths:
     get:
       operationId: getBillingSubscription
       tags: [billing]
-      summary: Get the authenticated user's subscription and entitlements
+      summary: Get the authenticated user's plan and entitlements
       responses:
         "200":
           description: Current subscription
@@ -58,52 +58,6 @@ paths:
                 $ref: "#/components/schemas/BillingSubscription"
         "401":
           description: Unauthorized
-  /billing/checkout:
-    post:
-      operationId: createBillingCheckout
-      tags: [billing]
-      summary: Create a Stripe Checkout session
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                plan:
-                  type: string
-                  enum: [pro, pro_plus]
-                cycle:
-                  type: string
-                  enum: [monthly, annual]
-              required: [plan, cycle]
-      responses:
-        "200":
-          description: Checkout session created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/BillingRedirect"
-        "400":
-          description: Invalid plan
-        "401":
-          description: Unauthorized
-  /billing/portal:
-    post:
-      operationId: createBillingPortal
-      tags: [billing]
-      summary: Create a Stripe customer portal session
-      responses:
-        "200":
-          description: Portal session created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/BillingRedirect"
-        "401":
-          description: Unauthorized
-        "404":
-          description: Billing customer not found
 components:
   schemas:
     HealthStatus:
