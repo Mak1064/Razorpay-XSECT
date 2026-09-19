@@ -1,3 +1,4 @@
 - [Parallel build conventions](parallel-build-conventions.md) — pre-scaffold shared files, one route file per stream, all scoring via the XsectEngine contract; rebuild db types with tsc -b.
 - [Plan access without payments](plan-access-without-payments.md) — XSECT uses persistent demo plan overrides only; do not reintroduce payment-provider runtime dependencies without explicit approval.
 - [Release and location strategy](release-location-strategy.md) — ship the 18+ production PWA first; native iOS/Android with reviewed background location follows later.
+- [Sensitive processing authorization](sensitive-processing-authorization.md) — enforce optional consent at backend processing boundaries; private uploads require one-time user-bound intents.

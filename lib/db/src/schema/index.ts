@@ -24,3 +24,4 @@ export * from "./network";
 export * from "./ai";
 export * from "./platform";
 export * from "./privacy";
+export * from "./storage";

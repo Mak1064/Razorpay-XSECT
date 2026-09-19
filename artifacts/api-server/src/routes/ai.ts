@@ -11,6 +11,7 @@ import { and, desc, eq, gte, sql } from "drizzle-orm";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { z } from "zod";
 import { requireAuth, type AuthenticatedRequest } from "../middlewares/requireAuth";
+import { requireConsent } from "../lib/consent";
 import { FREE_LIMITS, getEffectivePlan, requireEntitlement } from "../lib/entitlements";
 import { AgentEntitlementError, createAgent, runAgent } from "../services/ai/agent";
 import { answerQuery, IntelligenceLimitError } from "../services/ai/intelligence";
@@ -30,7 +31,7 @@ const twinPatch = z.object(Object.fromEntries(twinKeys.map((key) => [key, z.arra
 const entitlementError = (res: Response, error: IntelligenceLimitError | AgentEntitlementError) =>
   res.status(402).json({ error: error.message, entitlement: error.entitlement, requiredPlan: error instanceof AgentEntitlementError ? "pro_plus" : "pro" });
 
-router.post("/ai/query", async (req, res, next) => {
+router.post("/ai/query", requireConsent("ai_profiling"), async (req, res, next) => {
   try {
     const { prompt } = queryBody.parse(req.body);
     res.status(201).json(await answerQuery(actor(req), prompt));
@@ -56,7 +57,7 @@ router.get("/ai/history", async (req, res, next) => {
 router.get("/ai/twin", async (req, res, next) => {
   try { res.json({ twin: await getTwin(actor(req)) }); } catch (error) { next(error); }
 });
-router.post("/ai/twin/regenerate", async (req, res, next) => {
+router.post("/ai/twin/regenerate", requireConsent("ai_profiling"), async (req, res, next) => {
   try { res.json({ twin: await generateTwin(actor(req), true) }); } catch (error) { next(error); }
 });
 router.patch("/ai/twin", async (req, res, next) => {
@@ -75,7 +76,7 @@ router.get("/ai/agents", async (req, res, next) => {
     res.json({ agents, entitlement: plan.entitlements.includes("ai_agent"), plan: plan.plan });
   } catch (error) { next(error); }
 });
-router.post("/ai/agents", async (req, res, next) => {
+router.post("/ai/agents", requireConsent("ai_profiling"), async (req, res, next) => {
   try { res.status(201).json({ agent: await createAgent(actor(req), agentBody.parse(req.body).rawIntent) }); }
   catch (error) {
     if (error instanceof AgentEntitlementError) return entitlementError(res, error);
@@ -84,7 +85,7 @@ router.post("/ai/agents", async (req, res, next) => {
     next(error);
   }
 });
-router.post("/ai/agents/:id/run", async (req, res, next) => {
+router.post("/ai/agents/:id/run", requireConsent("ai_profiling"), async (req, res, next) => {
   try { res.json(await runAgent(String(req.params.id), actor(req))); }
   catch (error) {
     if (error instanceof AgentEntitlementError) return entitlementError(res, error);

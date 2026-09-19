@@ -6,8 +6,8 @@ import {
 import { Router, type IRouter, type Request, type Response } from 'express';
 
 import { setObjectAclPolicy } from '../lib/objectAcl';
-import { db, connectionTable, conversationTable, messageTable, professionalProfileTable } from '@workspace/db';
-import { and, eq, sql } from 'drizzle-orm';
+import { db, connectionTable, conversationTable, messageTable, professionalProfileTable, uploadIntentsTable } from '@workspace/db';
+import { and, eq, gt, isNull, sql } from 'drizzle-orm';
 import { requireAuth, type AuthenticatedRequest } from '../middlewares/requireAuth';
 import {
   ObjectNotFoundError,
@@ -42,6 +42,15 @@ router.post(
       const uploadURL = await objectStorageService.getObjectEntityUploadURL();
       const objectPath =
         objectStorageService.normalizeObjectEntityPath(uploadURL);
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+      await db.insert(uploadIntentsTable).values({
+        userId: userId(req),
+        objectPath,
+        originalName: name,
+        size,
+        contentType,
+        expiresAt,
+      });
 
       res.json(
         RequestUploadUrlResponse.parse({
@@ -104,7 +113,30 @@ router.post('/storage/uploads/finalize', async (req: Request, res: Response) => 
       return;
     }
     const file = await objectStorageService.getObjectEntityFile(objectPath);
-    await setObjectAclPolicy(file, { owner: userId(req), visibility: 'private' });
+    const [intent] = await db.select().from(uploadIntentsTable).where(and(
+      eq(uploadIntentsTable.userId, userId(req)),
+      eq(uploadIntentsTable.objectPath, objectPath),
+      isNull(uploadIntentsTable.finalizedAt),
+      gt(uploadIntentsTable.expiresAt, new Date()),
+    )).limit(1);
+    if (!intent) {
+      res.status(403).json({ error: 'Upload authorization is missing, expired, or already used' });
+      return;
+    }
+    const [metadata] = await file.getMetadata();
+    if (Number(metadata.size) !== intent.size || metadata.contentType !== intent.contentType) {
+      res.status(400).json({ error: 'Uploaded file does not match its declared metadata' });
+      return;
+    }
+    await setObjectAclPolicy(file, { owner: intent.userId, visibility: 'private' });
+    const finalized = await db.update(uploadIntentsTable)
+      .set({ finalizedAt: new Date() })
+      .where(and(eq(uploadIntentsTable.id, intent.id), isNull(uploadIntentsTable.finalizedAt)))
+      .returning({ id: uploadIntentsTable.id });
+    if (!finalized.length) {
+      res.status(409).json({ error: 'Upload was already finalized' });
+      return;
+    }
     res.json({ objectPath });
   } catch {
     res.status(400).json({ error: 'Uploaded object was not found' });
