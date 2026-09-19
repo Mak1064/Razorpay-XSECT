@@ -1,6 +1,7 @@
 import {
   adminUsersTable, aiQueriesTable, analyticsEventName, analyticsEventsTable,
-  connectionTable, crossingsTable, db, introductionRequestsTable, messageTable, missedXsectsTable,
+  adminModerationAuditTable, eventTable, organizationOpportunitiesTable, privacyRightsRequestsTable, reportTable,
+  connectionTable, conversationTable, crossingsTable, db, introductionRequestsTable, messageTable, missedXsectsTable,
   offersTable, organizationsTable, planOverridesTable, professionalProfileTable, standingAlertsTable,
   wantsTable, xsectsTable,
 } from "@workspace/db";
@@ -316,6 +317,10 @@ router.post("/admin/admins", async (req, res, next) => {
 
 router.delete("/admin/admins/:userId", async (req, res, next) => {
   try {
+    const configuredAdmins = (process.env.ADMIN_USER_IDS ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+    if (configuredAdmins.includes(req.params.userId)) {
+      return bad(res, "Configured administrators cannot be removed.", 409);
+    }
     if (req.params.userId === actor(req)) {
       const admins = await total(adminUsersTable);
       if (admins <= 1) return bad(res, "You cannot remove yourself as the last administrator.", 409);
@@ -323,6 +328,140 @@ router.delete("/admin/admins/:userId", async (req, res, next) => {
     await db.delete(adminUsersTable).where(eq(adminUsersTable.userId, req.params.userId));
     res.status(204).send();
   } catch (error) { next(error); }
+});
+
+// Moderation is deliberately kept separate from the general admin dashboard APIs.
+// Responses select only review-safe fields (never attachment payloads or private profile data).
+const moderationReason = z.string().trim().min(1).max(1000);
+const moderationParams = z.object({
+  type: z.enum(["want", "offer", "organization_opportunity", "event", "message", "report", "privacy_request"]),
+  id: z.string().uuid(),
+});
+const moderationBody = z.object({
+  action: z.enum(["approve", "hide", "reject", "restore", "delete"]),
+  reason: moderationReason.optional(),
+});
+
+router.get("/admin/moderation/queue", async (_req, res, next) => {
+  try {
+    const [reports, wants, offers, organizationOpportunities, events, messages, privacyRequests] = await Promise.all([
+      db.select({
+        id: reportTable.id, reporterId: reportTable.reporterId, subjectId: reportTable.subjectId,
+        connectionId: reportTable.connectionId, reason: reportTable.reason, details: reportTable.details,
+        status: reportTable.status, createdAt: reportTable.createdAt,
+      }).from(reportTable).orderBy(desc(reportTable.createdAt)).limit(100),
+      db.select().from(wantsTable).orderBy(desc(wantsTable.createdAt)).limit(100),
+      db.select().from(offersTable).orderBy(desc(offersTable.createdAt)).limit(100),
+      db.select().from(organizationOpportunitiesTable).orderBy(desc(organizationOpportunitiesTable.createdAt)).limit(100),
+      db.select().from(eventTable).orderBy(desc(eventTable.createdAt)).limit(100),
+      db.select({
+        id: messageTable.id, conversationId: messageTable.conversationId, senderId: messageTable.senderId,
+        body: messageTable.body, status: messageTable.status, createdAt: messageTable.createdAt,
+      }).from(messageTable).orderBy(desc(messageTable.createdAt)).limit(100),
+      db.select().from(privacyRightsRequestsTable).orderBy(desc(privacyRightsRequestsTable.createdAt)).limit(100),
+    ]);
+    const reportConnectionIds = reports.map((r) => r.connectionId).filter((id): id is string => Boolean(id));
+    const reportConnections = reportConnectionIds.length ? await db.select({
+      id: connectionTable.id, requesterId: connectionTable.requesterId, recipientId: connectionTable.recipientId,
+    }).from(connectionTable).where(inArray(connectionTable.id, reportConnectionIds)) : [];
+    const reportPairs = reportConnections.flatMap((c) => [
+      and(eq(conversationTable.participantA, c.requesterId), eq(conversationTable.participantB, c.recipientId)),
+      and(eq(conversationTable.participantA, c.recipientId), eq(conversationTable.participantB, c.requesterId)),
+    ]);
+    const reportConversations = reportPairs.length ? await db.select({ id: conversationTable.id }).from(conversationTable).where(or(...reportPairs)) : [];
+    const reportConversationIds = reportConversations.map((c) => c.id);
+    const reportMessageContext = reportConversationIds.length
+      ? messages.filter((m) => reportConversationIds.includes(m.conversationId)) : [];
+    const userIds = [...new Set([
+      ...reports.flatMap((r) => [r.reporterId, r.subjectId]),
+      ...wants.map((r) => r.userId), ...offers.map((r) => r.userId),
+      ...organizationOpportunities.map((r) => r.createdBy), ...events.map((r) => r.createdBy),
+      ...messages.map((r) => r.senderId), ...privacyRequests.map((r) => r.userId),
+    ])];
+    const profiles = userIds.length ? await db.select({
+      userId: professionalProfileTable.userId, displayName: professionalProfileTable.displayName,
+      role: professionalProfileTable.role, city: professionalProfileTable.city, area: professionalProfileTable.area,
+    }).from(professionalProfileTable).where(inArray(professionalProfileTable.userId, userIds)) : [];
+    res.json({
+      reports, wants, offers, organizationOpportunities, events, messages, privacyRequests,
+      profiles,
+      // Reports currently reference connections rather than message IDs; expose messages from
+      // their referenced conversations so reviewers can inspect the available context.
+      reportMessageContext,
+    });
+  } catch (error) { next(error); }
+});
+
+const moderationTables: Record<string, any> = {
+  want: wantsTable, offer: offersTable, organization_opportunity: organizationOpportunitiesTable,
+  message: messageTable, report: reportTable, privacy_request: privacyRightsRequestsTable,
+};
+
+router.get("/admin/moderation/audit", async (req, res, next) => {
+  try {
+    const limit = Math.min(200, Math.max(1, Number(req.query.limit) || 100));
+    const audits = await db.select().from(adminModerationAuditTable)
+      .orderBy(desc(adminModerationAuditTable.createdAt)).limit(limit);
+    res.json({ audits });
+  } catch (error) { next(error); }
+});
+
+router.patch("/admin/moderation/:type/:id", async (req, res, next) => {
+  try {
+    const params = moderationParams.safeParse(req.params);
+    const body = moderationBody.safeParse(req.body);
+    if (!params.success || !body.success) return bad(res, "Invalid moderation target or action.");
+    const { type, id } = params.data;
+    const { action, reason } = body.data;
+    if (action === "delete") return bad(res, "Use DELETE for permanent deletion.", 405);
+    if (type === "privacy_request" && action === "hide") return bad(res, "Privacy requests do not support hide.");
+    const now = new Date();
+    await db.transaction(async (tx) => {
+      if (type === "event") {
+        const set = action === "restore" || action === "approve"
+          ? { cancelledAt: null, cancelledReason: null }
+          : action === "hide" || action === "reject" ? { cancelledAt: now, cancelledReason: reason ?? "Hidden by moderation" } : {};
+        if (!Object.keys(set).length) throw new Error("Events support hide and restore only.");
+        const result = await tx.update(eventTable).set(set).where(eq(eventTable.id, id)).returning({ id: eventTable.id });
+        if (!result.length) throw new Error("Event not found.");
+      } else {
+        const table = moderationTables[type];
+        const status = type === "message"
+          ? (action === "restore" || action === "approve" ? "sent" : "hidden")
+          : type === "report"
+          ? (action === "approve" ? "resolved" : action === "reject" ? "dismissed" : action === "restore" ? "open" : "in_review")
+          : type === "privacy_request"
+            ? (action === "approve" ? "completed" : action === "reject" ? "rejected" : action === "restore" ? "pending" : "in_review")
+            : action === "restore" || action === "approve" ? "active" : "paused";
+        const result = await tx.update(table).set({ status }).where(eq(table.id, id)).returning({ id: table.id });
+        if (!result.length) throw new Error(`${type} not found.`);
+      }
+      await tx.insert(adminModerationAuditTable).values({
+        actorId: actor(req), action, targetType: type, targetId: id, reason: reason ?? null,
+      });
+    });
+    res.json({ id, type, action });
+  } catch (error) { if (error instanceof Error) return bad(res, error.message, error.message.endsWith("not found.") ? 404 : 400); next(error); }
+});
+
+router.delete("/admin/moderation/:type/:id", async (req, res, next) => {
+  try {
+    const params = moderationParams.safeParse(req.params);
+    const body = z.object({ reason: moderationReason }).safeParse(req.body ?? {});
+    if (!params.success || !body.success) return bad(res, "Invalid moderation target or reason.");
+    const { type, id } = params.data;
+    if (type === "privacy_request") return bad(res, "Privacy requests are immutable; reject instead.", 409);
+    const table = type === "event" ? eventTable : moderationTables[type];
+    if (!table) return bad(res, "Unsupported moderation target.", 400);
+    await db.transaction(async (tx) => {
+      const result = await tx.delete(table).where(eq(table.id, id)).returning({ id: table.id });
+      if (!result.length) throw new Error(`${type} not found.`);
+      await tx.insert(adminModerationAuditTable).values({
+        actorId: actor(req), action: "delete", targetType: type, targetId: id, reason: body.data.reason ?? null,
+      });
+    });
+    res.status(204).send();
+  } catch (error) { if (error instanceof Error) return bad(res, error.message, error.message.endsWith("not found.") ? 404 : 400); next(error); }
 });
 
 export default router;

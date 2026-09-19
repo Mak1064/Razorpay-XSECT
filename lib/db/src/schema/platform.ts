@@ -22,6 +22,17 @@ export const adminUsersTable = pgTable("admin_users", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+/** Append-only record of privileged moderation changes. */
+export const adminModerationAuditTable = pgTable("admin_moderation_audit", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  actorId: text("actor_id").notNull(),
+  action: text("action").notNull(),
+  targetType: text("target_type").notNull(),
+  targetId: text("target_id").notNull(),
+  reason: text("reason"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 /** Demo/developer plan override used to preview server-enforced plan access. */
 export const planOverridePlan = pgEnum("plan_override_plan", ["free", "pro", "pro_plus"]);
 export const planOverridesTable = pgTable("plan_overrides", {
@@ -34,4 +45,5 @@ export const planOverridesTable = pgTable("plan_overrides", {
 
 export type AnalyticsEvent = typeof analyticsEventsTable.$inferSelect;
 export type AdminUser = typeof adminUsersTable.$inferSelect;
+export type AdminModerationAudit = typeof adminModerationAuditTable.$inferSelect;
 export type PlanOverride = typeof planOverridesTable.$inferSelect;

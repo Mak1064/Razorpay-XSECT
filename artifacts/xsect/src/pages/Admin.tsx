@@ -5,9 +5,10 @@ import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, X
 import {
   type AdminUser, type Plan, useAdminAction, useAdminAreas, useAdminEvents, useAdminFunnel,
   useAdminMe, useAdminOverview, useAdminOverrides, useAdmins, useAdminUser, useAdminUsers, useBootstrapAdmin,
+  useAdminModerationQueue, useAdminModerationAudit, useAdminModerate
 } from '../hooks/use-admin';
 
-const tabs = ['Overview', 'Simulation', 'Users', 'Plans', 'Analytics', 'Admins'] as const;
+const tabs = ['Overview', 'Moderation', 'Audit', 'Simulation', 'Users', 'Plans', 'Analytics', 'Admins'] as const;
 type Tab = typeof tabs[number];
 const inputClass = 'w-full rounded-lg border border-border bg-white px-3 py-2 text-sm';
 const buttonClass = 'inline-flex items-center justify-center gap-2 rounded-lg bg-foreground px-4 py-2 text-sm font-semibold text-background disabled:opacity-50';
@@ -45,6 +46,8 @@ export default function Admin() {
       {tabs.map((item) => <button key={item} onClick={() => setTab(item)} className={`px-4 py-3 text-sm font-semibold border-b-2 ${tab === item ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'}`}>{item}</button>)}
     </div>
     {tab === 'Overview' && <Overview />}
+    {tab === 'Moderation' && <ModerationTab />}
+    {tab === 'Audit' && <AuditTab />}
     {tab === 'Simulation' && <Simulation />}
     {tab === 'Users' && <UsersTab />}
     {tab === 'Plans' && <PlansTab />}
@@ -171,6 +174,186 @@ function Analytics() {
     <section className="rounded-2xl border bg-white p-6"><h2 className="font-bold mb-4">Daily XSECT and request activity</h2><div className="h-72"><ResponsiveContainer width="100%" height="100%"><LineChart data={funnel.data?.daily ?? []}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="date" /><YAxis allowDecimals={false} /><Tooltip /><Legend /><Line type="monotone" dataKey="xsect_created" stroke="#7c3aed" /><Line type="monotone" dataKey="request_sent" stroke="#059669" /></LineChart></ResponsiveContainer></div></section>
     <section className="rounded-2xl border bg-white p-6"><h2 className="font-bold mb-4">Recent events</h2><div className="space-y-2 max-h-80 overflow-y-auto">{events.data?.events.map((event) => <div key={event.id} className="flex justify-between border-b py-2 text-sm"><span>{event.name}<small className="block text-muted-foreground">{event.userId || 'system'}</small></span><time className="text-xs text-muted-foreground">{new Date(event.createdAt).toLocaleString()}</time></div>)}</div></section>
   </div>;
+}
+
+function ModerationTab() {
+  const query = useAdminModerationQueue();
+
+  if (query.isLoading) return <p className="text-sm text-muted-foreground">Loading queue…</p>;
+  if (!query.data) return <Notice error={query.error} />;
+
+  const q = query.data;
+  const count = (q.reports?.length || 0) + (q.wants?.length || 0) + (q.offers?.length || 0) +
+                (q.organizationOpportunities?.length || 0) + (q.events?.length || 0) +
+                (q.messages?.length || 0) + (q.privacyRequests?.length || 0);
+
+  if (count === 0) return <div className="p-8 text-center text-muted-foreground border rounded-2xl bg-white"><p>The moderation queue is clear.</p></div>;
+
+  return (
+    <div className="space-y-8">
+      {q.reports?.length > 0 && <QueueSection title="Reports" items={q.reports} type="report" />}
+      {q.privacyRequests?.length > 0 && <QueueSection title="Privacy Requests" items={q.privacyRequests} type="privacy_request" />}
+      {q.wants?.length > 0 && <QueueSection title="Wants" items={q.wants} type="want" />}
+      {q.offers?.length > 0 && <QueueSection title="Offers" items={q.offers} type="offer" />}
+      {q.organizationOpportunities?.length > 0 && <QueueSection title="Organization Opportunities" items={q.organizationOpportunities} type="organization_opportunity" />}
+      {q.events?.length > 0 && <QueueSection title="Events" items={q.events} type="event" />}
+      {q.messages?.length > 0 && <QueueSection title="Messages" items={q.messages} type="message" context={q.reportMessageContext} />}
+    </div>
+  );
+}
+
+function QueueSection({ title, items, type, context }: { title: string, items: any[], type: string, context?: any[] }) {
+  return (
+    <section className="rounded-2xl border bg-white overflow-hidden shadow-sm">
+      <h3 className="bg-secondary/80 p-4 font-bold text-sm border-b flex justify-between items-center">
+        <span>{title}</span>
+        <span className="bg-foreground text-background text-xs px-2 py-0.5 rounded-full">{items.length}</span>
+      </h3>
+      <div className="divide-y divide-border">
+        {items.map(item => (
+          <QueueItem key={item.id || item.userId || item._id} item={item} type={type} context={context} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function QueueItem({ item, type, context }: { item: any, type: string, context?: any[] }) {
+  const mod = useAdminModerate();
+  const [reason, setReason] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const id = item.id || item.userId || item._id;
+
+  const handleAction = (action: 'approve'|'hide'|'reject'|'restore') => {
+    mod.mutate({ type, id, action, reason });
+  };
+
+  const handleDelete = () => {
+    if (!confirmDelete) { setConfirmDelete(true); return; }
+    if (!reason) { alert('Reason required for permanent deletion'); return; }
+    mod.mutate({ type, id, isDelete: true, reason });
+  };
+
+  const displayFields = Object.entries(item).filter(([k, v]) =>
+    !['id', 'userId', '_id', 'createdAt', 'updatedAt', 'title', 'reason', 'content', 'description', 'details', 'requestType', 'status'].includes(k) &&
+    typeof v !== 'object'
+  );
+
+  return (
+    <div className="p-5 flex flex-col lg:flex-row gap-6 hover:bg-secondary/20 transition-colors">
+      <div className="flex-1 space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-mono-custom text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-md">{id}</span>
+          {item.status && <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${item.status === 'active' || item.status === 'approved' ? 'bg-emerald-100 text-emerald-800' : item.status === 'rejected' || item.status === 'hidden' ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary'}`}>{item.status}</span>}
+          {item.createdAt && <span className="text-xs text-muted-foreground">{new Date(item.createdAt).toLocaleString()}</span>}
+        </div>
+
+        {item.title && <p className="text-lg font-bold">{item.title}</p>}
+        {item.requestType && <p className="text-sm font-bold text-primary">Type: {item.requestType}</p>}
+        {item.reason && <div className="p-3 bg-destructive/5 border-l-2 border-destructive rounded-r-md"><p className="text-sm font-medium text-destructive">Report Reason: {item.reason}</p></div>}
+        {item.content && <p className="text-sm border-l-2 border-border pl-3 py-1 italic bg-secondary/30 rounded-r-md p-2">{item.content}</p>}
+        {item.description && <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{item.description}</p>}
+        {item.details && <p className="text-sm text-muted-foreground leading-relaxed bg-secondary/30 p-3 rounded-md">{item.details}</p>}
+
+        {displayFields.length > 0 && (
+           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4 pt-4 border-t border-border/50">
+             {displayFields.map(([k, v]) => (
+                <div key={k} className="text-xs flex flex-col gap-1">
+                  <span className="text-muted-foreground uppercase tracking-wider font-mono-custom text-[9px]">{k.replace(/([A-Z])/g, ' $1').trim()}</span>
+                  <span className="font-medium truncate" title={String(v)}>{String(v)}</span>
+                </div>
+             ))}
+           </div>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-2 w-full lg:w-[240px] shrink-0 bg-white border border-border p-4 rounded-xl shadow-sm self-start">
+        {mod.error && <Notice error={mod.error} />}
+
+        {confirmDelete ? (
+          <div className="space-y-3">
+            <p className="text-xs font-bold text-destructive">Confirm permanent deletion? This cannot be undone.</p>
+            <input className={`${inputClass} text-xs border-destructive/30 focus:border-destructive focus:ring-destructive/20`} placeholder="Required reason..." value={reason} onChange={e => setReason(e.target.value)} />
+            <div className="flex gap-2">
+              <button className={`${buttonClass} bg-destructive text-white flex-1 py-2`} disabled={!reason || mod.isPending} onClick={handleDelete}>{mod.isPending ? '...' : 'Delete'}</button>
+              <button className={`${buttonClass} bg-secondary text-foreground flex-1 py-2`} disabled={mod.isPending} onClick={() => setConfirmDelete(false)}>Cancel</button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+               <button className={`${buttonClass} bg-emerald-600 hover:bg-emerald-700 text-white py-2`} disabled={mod.isPending} onClick={() => handleAction('approve')}>Approve</button>
+               <button className={`${buttonClass} bg-amber-600 hover:bg-amber-700 text-white py-2`} disabled={mod.isPending} onClick={() => handleAction('hide')}>Hide</button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+               <button className={`${buttonClass} bg-secondary hover:bg-secondary/80 text-foreground py-2`} disabled={mod.isPending} onClick={() => handleAction('reject')}>Reject</button>
+               <button className={`${buttonClass} bg-secondary hover:bg-secondary/80 text-foreground py-2`} disabled={mod.isPending} onClick={() => handleAction('restore')}>Restore</button>
+            </div>
+            <div className="pt-2 border-t mt-2">
+              <input className={`${inputClass} text-xs mb-2`} placeholder="Optional moderation reason..." value={reason} onChange={e => setReason(e.target.value)} />
+              {type !== 'privacy_request' && <button className={`${buttonClass} w-full bg-transparent border border-destructive text-destructive hover:bg-destructive hover:text-white transition-colors py-2`} disabled={mod.isPending} onClick={() => setConfirmDelete(true)}>Permanent Delete</button>}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AuditTab() {
+  const query = useAdminModerationAudit(100);
+
+  if (query.isLoading) return <p className="text-sm text-muted-foreground">Loading audit log…</p>;
+  if (!query.data) return <Notice error={query.error} />;
+
+  return (
+    <section className="rounded-2xl border bg-white overflow-hidden shadow-sm">
+      <div className="bg-secondary/80 p-5 border-b">
+        <h2 className="font-bold">Moderation Audit Log</h2>
+        <p className="text-xs text-muted-foreground mt-1">Immutable record of all administrative moderation actions.</p>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-secondary/30 text-left border-b">
+            <tr>
+              <th className="p-4 font-semibold text-muted-foreground">Time</th>
+              <th className="p-4 font-semibold text-muted-foreground">Actor</th>
+              <th className="p-4 font-semibold text-muted-foreground">Action</th>
+              <th className="p-4 font-semibold text-muted-foreground">Target</th>
+              <th className="p-4 font-semibold text-muted-foreground">Reason</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {query.data.audits.map((audit: any, i) => (
+              <tr key={i} className="hover:bg-secondary/20 transition-colors">
+                <td className="p-4 text-muted-foreground font-mono-custom text-xs whitespace-nowrap">{new Date(audit.createdAt).toLocaleString()}</td>
+                <td className="p-4 font-mono-custom text-xs">{audit.actorId}</td>
+                <td className="p-4">
+                  <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+                    audit.action === 'approve' || audit.action === 'restore' ? 'bg-emerald-100 text-emerald-800' :
+                    audit.action === 'delete' ? 'bg-destructive/10 text-destructive' :
+                    audit.action === 'hide' || audit.action === 'reject' ? 'bg-amber-100 text-amber-800' :
+                    'bg-primary/10 text-primary'
+                  }`}>{audit.action}</span>
+                </td>
+                <td className="p-4">
+                  <div className="flex flex-col">
+                    <span className="font-medium capitalize">{audit.targetType.replace('_', ' ')}</span>
+                    <span className="font-mono-custom text-[10px] text-muted-foreground">{audit.targetId}</span>
+                  </div>
+                </td>
+                <td className="p-4 text-muted-foreground text-xs">{audit.reason || '—'}</td>
+              </tr>
+            ))}
+            {!query.data.audits.length && (
+              <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">No audit logs found.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
 }
 
 function AdminsTab() {

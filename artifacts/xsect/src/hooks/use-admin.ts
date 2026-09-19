@@ -55,6 +55,49 @@ export function useAdmins(enabled = true) {
   return useQuery({ queryKey: ['admin', 'admins'], queryFn: () => api<{ admins: Array<{ userId: string; displayName: string | null; role: string | null; grantedBy: string | null; createdAt: string }> }>('/api/admin/admins'), enabled });
 }
 
+export type ModerationQueue = {
+  reports: any[];
+  wants: any[];
+  offers: any[];
+  organizationOpportunities: any[];
+  events: any[];
+  messages: any[];
+  privacyRequests: any[];
+  profiles: any[];
+  reportMessageContext: any[];
+};
+
+export function useAdminModerationQueue(enabled = true) {
+  return useQuery({ queryKey: ['admin', 'moderation', 'queue'], queryFn: () => api<ModerationQueue>('/api/admin/moderation/queue'), enabled });
+}
+
+export type AuditLog = {
+  actorId: string;
+  action: string;
+  targetType: string;
+  targetId: string;
+  reason: string | null;
+  createdAt: string;
+};
+
+export function useAdminModerationAudit(limit = 100, enabled = true) {
+  return useQuery({ queryKey: ['admin', 'moderation', 'audit', limit], queryFn: () => api<{ audits: AuditLog[] }>(`/api/admin/moderation/audit?limit=${limit}`), enabled });
+}
+
+export function useAdminModerate() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ type, id, action, reason, isDelete }: { type: string; id: string; action?: 'approve' | 'hide' | 'reject' | 'restore'; reason?: string; isDelete?: boolean }) => {
+      const method = isDelete ? 'DELETE' : 'PATCH';
+      const body = isDelete ? { reason } : { action, reason };
+      return api<any>(`/api/admin/moderation/${type}/${id}`, { method, body: JSON.stringify(body) });
+    },
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ['admin'] });
+    },
+  });
+}
+
 export function useAdminAction() {
   const client = useQueryClient();
   return useMutation({

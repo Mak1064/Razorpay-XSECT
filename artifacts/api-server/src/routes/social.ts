@@ -1,5 +1,5 @@
 import { db, connectionTable, conversationTable, eventRsvpTable, eventTable, eventAdminTable, eventGenerationTable, eventReportTable, professionalProfileTable, messageTable, notificationTable, consentAuditTable, reportTable, introductionTable } from "@workspace/db";
-import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, ne, or, sql } from "drizzle-orm";
 import { engine } from "../services/xsect-engine";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { requireAuth, type AuthenticatedRequest } from "../middlewares/requireAuth";
@@ -98,7 +98,7 @@ router.get("/social/conversations/:id/messages", async (req, res, next) => {
   try {
     const userId = actor(req); const c = (await db.select().from(conversationTable).where(eq(conversationTable.id, req.params.id)).limit(1))[0];
     if (!c || (c.participantA !== userId && c.participantB !== userId) || !(await accepted(c.participantA, c.participantB))) return bad(res, "Conversation unavailable.", 403);
-    res.json({ messages: await db.select().from(messageTable).where(eq(messageTable.conversationId, c.id)).orderBy(messageTable.createdAt) });
+    res.json({ messages: await db.select().from(messageTable).where(and(eq(messageTable.conversationId, c.id), ne(messageTable.status, "hidden"))).orderBy(messageTable.createdAt) });
   } catch (e) { next(e); }
 });
 router.post("/social/conversations/:id/messages", async (req, res, next) => {
