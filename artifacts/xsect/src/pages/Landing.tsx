@@ -30,9 +30,9 @@ export default function Landing() {
         <section className="relative isolate w-full overflow-hidden border-b border-border">
           <div className="absolute inset-0 -z-20" aria-hidden="true">
             <img
-              src={publicAsset('/images/city-1.jpg')}
+              src={publicAsset('/images/nyc-evening-alt.jpg')}
               alt=""
-              className="h-full w-full object-cover object-center saturate-[0.95] contrast-[1.08]"
+              className="h-full w-full object-cover object-center brightness-[0.62] saturate-[0.9] contrast-[1.08]"
             />
           </div>
           <div className="px-6 md:px-12 py-20 md:py-32 max-w-[1400px] mx-auto w-full flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
@@ -72,8 +72,8 @@ export default function Landing() {
           </div>
           
           {/* Visual Narrative Section */}
-          <div className="flex-1 w-full relative reveal-2 lg:h-[650px] flex items-center justify-center">
-            <div className="relative w-full max-w-lg aspect-square lg:aspect-auto lg:h-[550px] rounded-2xl overflow-hidden border border-border shadow-2xl bg-black" data-testid="container-hero-visual">
+          <div className="flex-1 relative reveal-2 lg:h-[650px] flex items-center justify-center w-[calc(100%+3rem)] md:w-[calc(100%+6rem)] lg:w-full -mx-6 md:-mx-12 lg:mx-0">
+            <div className="relative w-full max-w-none aspect-[4/5] sm:aspect-[16/10] lg:aspect-auto lg:h-full min-h-[560px] overflow-hidden border-y lg:border border-white/20 shadow-2xl bg-black" data-testid="container-hero-visual">
               {/* Background Plate */}
               <div className="absolute inset-0">
                 <img 
