@@ -32,7 +32,7 @@ export default function Landing() {
             <img
               src={publicAsset('/images/nyc-night-buildings.jpg')}
               alt=""
-              className="h-full w-full object-cover object-center brightness-[0.72] saturate-[1.05] contrast-[1.08]"
+              className="h-full w-full object-cover object-[center_72%] scale-[1.18] brightness-[0.72] saturate-[1.05] contrast-[1.08]"
             />
           </div>
           <div className="px-6 md:px-12 py-20 md:py-32 max-w-[1400px] mx-auto w-full flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
