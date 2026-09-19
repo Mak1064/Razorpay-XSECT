@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useCallback, useContext, useState, ReactNode } from 'react';
 
 export interface UserProfile {
   name: string;
@@ -20,6 +20,10 @@ export interface StoreState {
   // Plans
   plan: 'free' | 'pro' | 'pro_plus';
   billingCycle: 'monthly' | 'annual';
+  billingStatus: 'free' | 'trialing' | 'active' | 'past_due' | 'canceled' | 'unpaid' | 'incomplete' | 'paused';
+  currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
+  entitlements: string[];
   
   // Geolocation (in-memory)
   locationTracking: 'idle' | 'tracking' | 'paused' | 'error';
@@ -35,8 +39,7 @@ interface StoreContextType {
   unlockIdentity: (id: string) => void;
   updateProfile: (profile: Partial<UserProfile>) => void;
   
-  // Plans
-  setPlan: (plan: 'free' | 'pro' | 'pro_plus', cycle?: 'monthly' | 'annual') => void;
+  syncBilling: (billing: Pick<StoreState, 'plan' | 'billingCycle' | 'billingStatus' | 'currentPeriodEnd' | 'cancelAtPeriodEnd' | 'entitlements'>) => void;
   
   // Geolocation
   setLocationTrackingStatus: (status: StoreState['locationTracking'], accuracy?: number | null) => void;
@@ -51,6 +54,10 @@ const initialState: StoreState = {
   unlockedIdentities: [],
   plan: 'free',
   billingCycle: 'monthly',
+  billingStatus: 'free',
+  currentPeriodEnd: null,
+  cancelAtPeriodEnd: false,
+  entitlements: [],
   locationTracking: 'idle',
   locationAccuracy: null
 };
@@ -90,11 +97,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     profile: s.profile ? { ...s.profile, ...profile } : null
   }));
 
-  const setPlan = (plan: 'free' | 'pro' | 'pro_plus', cycle?: 'monthly' | 'annual') => setState(s => ({
+  const syncBilling: StoreContextType['syncBilling'] = useCallback((billing) => setState(s => ({
     ...s,
-    plan,
-    billingCycle: cycle || s.billingCycle
-  }));
+    ...billing,
+  })), []);
 
   const setLocationTrackingStatus = (status: StoreState['locationTracking'], accuracy?: number | null) => setState(s => ({
     ...s,
@@ -106,7 +112,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     <StoreContext.Provider value={{
       state, completeOnboarding, saveOpportunity, 
       requestConnection, acceptConnection, unlockIdentity, 
-      updateProfile, setPlan, setLocationTrackingStatus
+      updateProfile, syncBilling, setLocationTrackingStatus
     }}>
       {children}
     </StoreContext.Provider>

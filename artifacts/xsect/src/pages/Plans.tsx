@@ -1,23 +1,46 @@
 import { useStore } from '../store';
-import { useLocation } from 'wouter';
-import { Check, Info, ShieldAlert, Sparkles, Workflow } from 'lucide-react';
+import { Check, CreditCard, Info, Sparkles, Workflow } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
+import { useCreateBillingCheckout, useCreateBillingPortal } from '@workspace/api-client-react';
 
 export default function Plans() {
-  const { state, setPlan } = useStore();
-  const [, setLocation] = useLocation();
+  const { state } = useStore();
   const { toast } = useToast();
   const [cycle, setCycle] = useState<'monthly' | 'annual'>('monthly');
+  const checkout = useCreateBillingCheckout();
+  const portal = useCreateBillingPortal();
+  const isRedirecting = checkout.isPending || portal.isPending;
 
-  const handleCheckout = (plan: 'pro' | 'pro_plus') => {
-    // Mock checkout
-    toast({
-      title: "Demo Billing Confirmed",
-      description: `Upgraded to ${plan === 'pro' ? 'XSECT Pro' : 'Pro+'} (${cycle}). Local entitlement unlocked.`,
-    });
-    setPlan(plan, cycle);
-    setLocation('/radar');
+  const openPortal = async () => {
+    try {
+      const result = await portal.mutateAsync();
+      window.location.assign(result.url);
+    } catch (error) {
+      toast({
+        title: 'Unable to open billing',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleCheckout = async (plan: 'pro' | 'pro_plus') => {
+    if (state.plan !== 'free') {
+      await openPortal();
+      return;
+    }
+
+    try {
+      const result = await checkout.mutateAsync({ data: { plan, cycle } });
+      window.location.assign(result.url);
+    } catch (error) {
+      toast({
+        title: 'Checkout unavailable',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -63,10 +86,10 @@ export default function Plans() {
           </ul>
           <button 
             disabled={state.plan === 'free'}
-            onClick={() => { setPlan('free'); setLocation('/radar'); }}
+            onClick={openPortal}
             className="w-full py-3 rounded-lg border border-border text-foreground font-medium hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {state.plan === 'free' ? 'Active' : 'Downgrade'}
+            {state.plan === 'free' ? 'Active' : 'Manage or cancel'}
           </button>
         </div>
 
@@ -89,11 +112,11 @@ export default function Plans() {
             <li className="flex gap-3 text-sm"><Check size={18} className="text-primary shrink-0" /> Read receipts on messages</li>
           </ul>
           <button 
-            disabled={state.plan === 'pro'}
+            disabled={isRedirecting || state.plan === 'pro'}
             onClick={() => handleCheckout('pro')}
             className="w-full py-3 rounded-lg bg-primary text-primary-foreground font-bold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed relative"
           >
-            {state.plan === 'pro' ? 'Active' : 'Upgrade to Pro'}
+            {state.plan === 'pro' ? 'Active' : state.plan === 'free' ? 'Start Pro checkout' : 'Change in billing portal'}
           </button>
         </div>
 
@@ -117,17 +140,17 @@ export default function Plans() {
             </li>
           </ul>
           <button 
-            disabled={state.plan === 'pro_plus'}
+            disabled={isRedirecting || state.plan === 'pro_plus'}
             onClick={() => handleCheckout('pro_plus')}
             className="w-full py-3 rounded-lg border-2 border-foreground text-foreground font-bold hover:bg-foreground hover:text-background transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {state.plan === 'pro_plus' ? 'Active' : 'Upgrade to Pro+'}
+            {state.plan === 'pro_plus' ? 'Active' : state.plan === 'free' ? 'Start Pro+ checkout' : 'Change in billing portal'}
           </button>
         </div>
       </div>
 
       <div className="text-center text-xs text-muted-foreground max-w-lg mx-auto flex items-center justify-center gap-2">
-        <Info size={14} /> <span>This is a demo billing environment. No real charges are processed.</span>
+        <CreditCard size={14} /> <span>Secure recurring billing is processed by Stripe. Cancel or update payment details from your billing portal.</span>
       </div>
     </div>
   );

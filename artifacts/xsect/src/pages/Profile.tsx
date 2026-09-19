@@ -1,9 +1,10 @@
 import { useStore } from '../store';
 import { useState } from 'react';
-import { ShieldCheck, Edit3, Check, Target, Lock, LogOut } from 'lucide-react';
+import { ShieldCheck, Edit3, Check, Target, Lock, LogOut, CreditCard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useClerk, useUser } from '@clerk/react';
 import { useLocation } from 'wouter';
+import { useCreateBillingPortal } from '@workspace/api-client-react';
 
 export default function Profile() {
   const { state, updateProfile, setLocationTrackingStatus } = useStore();
@@ -13,6 +14,7 @@ export default function Profile() {
   const [, setLocation] = useLocation();
   const [isEditing, setIsEditing] = useState(false);
   const [editIntent, setEditIntent] = useState(state.profile?.intent || '');
+  const portal = useCreateBillingPortal();
 
   const handleSave = () => {
     updateProfile({ intent: editIntent });
@@ -25,6 +27,19 @@ export default function Profile() {
     setLocationTrackingStatus('idle', null);
     await signOut();
     setLocation('/');
+  };
+
+  const handleManageBilling = async () => {
+    try {
+      const result = await portal.mutateAsync();
+      window.location.assign(result.url);
+    } catch (error) {
+      toast({
+        title: 'Unable to open billing',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const profileName = state.profile?.name || user?.fullName || 'Anonymous';
@@ -82,6 +97,30 @@ export default function Profile() {
               <span className="text-muted-foreground font-medium">Current Plan</span>
               <span className="font-mono-custom font-medium uppercase text-xs px-2 py-0.5 bg-secondary rounded">{state.plan}</span>
             </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted-foreground font-medium">Billing Status</span>
+              <span className="font-medium capitalize">{state.billingStatus.replace('_', ' ')}</span>
+            </div>
+            {state.currentPeriodEnd && (
+              <div className="flex justify-between items-center gap-4 text-sm">
+                <span className="text-muted-foreground font-medium">
+                  {state.cancelAtPeriodEnd ? 'Access until' : 'Renews'}
+                </span>
+                <span className="text-foreground text-right">
+                  {new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(state.currentPeriodEnd))}
+                </span>
+              </div>
+            )}
+            {state.plan !== 'free' && (
+              <button
+                onClick={handleManageBilling}
+                disabled={portal.isPending}
+                className="w-full px-4 py-2.5 bg-foreground text-background rounded-lg text-sm font-bold hover:bg-foreground/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                <CreditCard size={16} />
+                {portal.isPending ? 'Opening Stripe…' : 'Manage subscription'}
+              </button>
+            )}
             
             <div className="bg-secondary/50 rounded-xl p-4 border border-border mt-8">
               <div className="flex items-center gap-2 text-xs font-mono-custom font-semibold uppercase text-muted-foreground mb-2">

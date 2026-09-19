@@ -7,6 +7,7 @@ import { Route, Switch, useLocation, Router as WouterRouter, Redirect } from 'wo
 import { ClerkProvider, SignIn, SignUp, Show, useClerk, useUser } from '@clerk/react';
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
+import { getGetBillingSubscriptionQueryKey, useGetBillingSubscription } from '@workspace/api-client-react';
 
 import { StoreProvider, useStore } from './store';
 import Shell from './components/Shell';
@@ -126,6 +127,33 @@ function ClerkQueryClientCacheInvalidator() {
   return null;
 }
 
+function BillingStateSynchronizer() {
+  const { isSignedIn } = useUser();
+  const { syncBilling } = useStore();
+  const { data } = useGetBillingSubscription({
+    query: {
+      queryKey: getGetBillingSubscriptionQueryKey(),
+      enabled: Boolean(isSignedIn),
+      staleTime: 30_000,
+      refetchOnWindowFocus: true,
+    },
+  });
+
+  useEffect(() => {
+    if (!data) return;
+    syncBilling({
+      plan: data.plan,
+      billingCycle: data.billingCycle,
+      billingStatus: data.status,
+      currentPeriodEnd: data.currentPeriodEnd,
+      cancelAtPeriodEnd: data.cancelAtPeriodEnd,
+      entitlements: data.entitlements,
+    });
+  }, [data, syncBilling]);
+
+  return null;
+}
+
 function AppRoutes() {
   const { state } = useStore();
   const { isLoaded, isSignedIn } = useUser();
@@ -220,6 +248,7 @@ function ClerkProviderWithRoutes() {
         <ClerkQueryClientCacheInvalidator />
         <TooltipProvider>
           <StoreProvider>
+            <BillingStateSynchronizer />
             <RoutedErrorBoundary>
               <div className="min-h-[100dvh] w-full text-foreground bg-background font-sans selection:bg-primary/20 selection:text-primary">
                 <AppRoutes />

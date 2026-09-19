@@ -1,0 +1,1 @@
+- [Stripe sync bundling](stripe-sync-bundling.md) — keep stripe-replit-sync external to the API bundle so its packaged migrations remain available at runtime.
