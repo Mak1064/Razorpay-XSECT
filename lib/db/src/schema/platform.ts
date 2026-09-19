@@ -22,7 +22,7 @@ export const adminUsersTable = pgTable("admin_users", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-/** Demo/developer plan override. When present it takes precedence over Stripe-derived plan. */
+/** Demo/developer plan override used to preview server-enforced plan access. */
 export const planOverridePlan = pgEnum("plan_override_plan", ["free", "pro", "pro_plus"]);
 export const planOverridesTable = pgTable("plan_overrides", {
   userId: text("user_id").primaryKey(),
