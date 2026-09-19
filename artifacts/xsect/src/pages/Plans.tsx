@@ -2,14 +2,32 @@ import { useStore } from '../store';
 import { Check, CreditCard, Info, Sparkles, Workflow } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
-import { useCreateBillingCheckout, useCreateBillingPortal } from '@workspace/api-client-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { getGetBillingSubscriptionQueryKey, useCreateBillingCheckout, useCreateBillingPortal } from '@workspace/api-client-react';
+import { adminMeQueryKey, type Plan } from '../hooks/use-admin';
 
 export default function Plans() {
   const { state } = useStore();
   const { toast } = useToast();
   const [cycle, setCycle] = useState<'monthly' | 'annual'>('monthly');
+  const queryClient = useQueryClient();
   const checkout = useCreateBillingCheckout();
   const portal = useCreateBillingPortal();
+  const demoSwitch = useMutation({
+    mutationFn: async (plan: Plan) => {
+      const response = await fetch('/api/billing-demo/plan', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ plan }) });
+      if (!response.ok) throw new Error(((await response.json().catch(() => null)) as { error?: string } | null)?.error ?? 'Unable to switch demo plan.');
+      return response.json();
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: getGetBillingSubscriptionQueryKey() }),
+        queryClient.invalidateQueries({ queryKey: adminMeQueryKey }),
+      ]);
+      toast({ title: 'Demo plan switched', description: 'Entitlements now follow the selected demo plan.' });
+    },
+    onError: (error) => toast({ title: 'Unable to switch demo plan', description: error instanceof Error ? error.message : 'Please try again.', variant: 'destructive' }),
+  });
   const isRedirecting = checkout.isPending || portal.isPending;
 
   const openPortal = async () => {
@@ -68,6 +86,23 @@ export default function Plans() {
           </button>
         </div>
       </header>
+
+      <section className="mb-10 bg-amber-50 border border-amber-200 rounded-2xl p-5 text-center">
+        <p className="text-xs font-mono-custom uppercase tracking-widest text-amber-800 font-semibold mb-3">Demo mode: switch plan</p>
+        <p className="text-sm text-amber-900/80 mb-4">Preview plan entitlements without changing your Stripe subscription.</p>
+        <div className="inline-flex rounded-lg border border-amber-300 bg-white p-1">
+          {([['free', 'Free'], ['pro', 'Pro'], ['pro_plus', 'Pro+']] as const).map(([plan, label]) => (
+            <button
+              key={plan}
+              disabled={demoSwitch.isPending}
+              onClick={() => demoSwitch.mutate(plan)}
+              className={`px-5 py-2 rounded-md text-sm font-semibold transition-colors ${state.plan === plan ? 'bg-amber-700 text-white' : 'text-amber-900 hover:bg-amber-100'} disabled:opacity-50`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </section>
 
       <div className="grid md:grid-cols-3 gap-6 mb-12">
         {/* Free Plan */}

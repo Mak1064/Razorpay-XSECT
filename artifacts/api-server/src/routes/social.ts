@@ -1,5 +1,6 @@
 import { db, connectionTable, conversationTable, eventRsvpTable, eventTable, eventAdminTable, eventGenerationTable, eventReportTable, professionalProfileTable, messageTable, notificationTable, consentAuditTable, reportTable, introductionTable } from "@workspace/db";
 import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
+import { engine } from "../services/xsect-engine";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { requireAuth, type AuthenticatedRequest } from "../middlewares/requireAuth";
 
@@ -60,6 +61,8 @@ async function transition(req: any, res: any, next: any, status: "accepted" | "d
     const [updated] = await db.update(connectionTable).set({ status, blockedBy: status === "blocked" ? userId : null }).where(eq(connectionTable.id, id)).returning();
     const other = c.requesterId === userId ? c.recipientId : c.requesterId;
     if (status === "accepted") await notify(other, "connection_accepted", "Connection accepted", "Your connection request was accepted.", c.id);
+    if (status === "accepted") await engine.syncPairState(c.requesterId, c.recipientId, "connected");
+    if (status === "blocked") await engine.syncPairState(c.requesterId, c.recipientId, "dismissed");
     res.json({ connection: updated });
   } catch (e) { next(e); }
 }
@@ -125,14 +128,6 @@ router.post("/social/conversations/:id/read", async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-const seedEvents = [
-  { title: "XSECT Founder Supper", description: "An intimate evening for builders, operators, and curious collaborators.", location: "Downtown community table", startsAt: new Date("2026-06-12T18:30:00Z"), capacity: "24" },
-  { title: "Creative Systems Workshop", description: "A practical session on turning ideas into repeatable creative systems.", location: "Arts district studio", startsAt: new Date("2026-06-20T16:00:00Z"), capacity: "40" },
-];
-async function ensureEvents() {
-  const existing = await db.select({ id: eventTable.id }).from(eventTable).limit(1);
-  if (!existing.length) await db.insert(eventTable).values(seedEvents);
-}
 const terms = (value: unknown) => Array.isArray(value) ? value.filter((v): v is string => typeof v === "string").map((v) => v.toLowerCase()) : [];
 async function relevance(eventId: string, viewerId: string) {
   const event = (await db.select().from(eventTable).where(eq(eventTable.id, eventId)).limit(1))[0];
@@ -145,7 +140,6 @@ async function relevance(eventId: string, viewerId: string) {
 }
 router.get("/social/events", async (req, res, next) => {
   try {
-    await ensureEvents();
     const userId = actor(req);
     const events = await db.select().from(eventTable).orderBy(eventTable.startsAt);
     const rsvps = await db.select().from(eventRsvpTable).where(eq(eventRsvpTable.userId, userId));
@@ -159,7 +153,6 @@ router.get("/social/events", async (req, res, next) => {
 });
 router.get("/social/events/:id", async (req, res, next) => {
   try {
-    await ensureEvents();
     const event = (await db.select().from(eventTable).where(eq(eventTable.id, req.params.id)).limit(1))[0];
     if (!event) return bad(res, "Event not found.", 404);
     const rsvp = (await db.select().from(eventRsvpTable).where(and(eq(eventRsvpTable.eventId, event.id), eq(eventRsvpTable.userId, actor(req)))).limit(1))[0];

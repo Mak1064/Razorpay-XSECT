@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export type Profile = {
   userId: string; displayName: string; role: string; intent: string; photoUrl: string | null;
-  company: string | null; industry: string | null; identity: Record<string, string>;
+  company: string | null; industry: string | null; city: string | null; area: string | null; identity: Record<string, string>;
   experience: Array<{ title: string; company: string; startYear?: number; endYear?: number; description?: string }>;
   links: Array<{ label: string; url: string }>; skills: string[]; wants: string[]; offers: string[];
   opportunityCategories: string[]; availability: string; urgency: string; discoveryRadius: number;
@@ -34,4 +34,11 @@ export function useProfile(enabled = true) {
     onSuccess: (profile) => queryClient.setQueryData(profileQueryKey, profile),
   });
   return { ...query, saveProfile: mutation.mutateAsync, saving: mutation.isPending, saveError: mutation.error };
+}
+export function useAreas() {
+  return useQuery({ queryKey: ['areas'], staleTime: Infinity, queryFn: async () => {
+    const res = await fetch('/api/areas', { credentials: 'include' });
+    if (!res.ok) throw new Error('Unable to load areas');
+    return res.json() as Promise<{ areas: Array<{ city: string; area: string }> }>;
+  } });
 }

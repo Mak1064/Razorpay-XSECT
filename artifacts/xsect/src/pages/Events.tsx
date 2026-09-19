@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Calendar as CalendarIcon, Check, Clock3, MapPin, ShieldCheck, Users, X, Plus, Flag, Sparkles, Pencil, UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link } from 'wouter';
+import { NetworkApiError, useEventXsects } from '../hooks/use-network';
 
 type EventRecord = {
   id: string; title: string; description: string; location: string; startsAt: string;
@@ -28,6 +30,7 @@ export default function EventsPage() {
   const selected = events.find((event) => event.id === selectedId) ?? events[0];
   const detailQuery = useQuery<EventDetail>({ queryKey: ['social', 'events', selected?.id], queryFn: () => api(`/api/social/events/${selected.id}`), enabled: !!selected?.id });
   const detail = detailQuery.data;
+  const eventXsects = useEventXsects(selected?.id);
   const create = useMutation({ mutationFn: () => api('/api/social/events', { method: 'POST', body: JSON.stringify({ ...form, capacity: Number(form.capacity), intentTags: form.intentTags.split(',').map((tag) => tag.trim()).filter(Boolean) }) }), onSuccess: () => { setShowCreate(false); setForm({ title: '', description: '', location: '', startsAt: '', capacity: '24', intentTags: '' }); queryClient.invalidateQueries({ queryKey: ['social', 'events'] }); } });
   const update = useMutation({ mutationFn: () => api(`/api/social/events/${selected.id}`, { method: 'PATCH', body: JSON.stringify({ ...form, capacity: Number(form.capacity), intentTags: form.intentTags.split(',').map((tag) => tag.trim()).filter(Boolean) }) }), onSuccess: () => { setShowEdit(false); queryClient.invalidateQueries({ queryKey: ['social', 'events'] }); queryClient.invalidateQueries({ queryKey: ['social', 'events', selected.id] }); } });
   const rsvp = useMutation({
@@ -110,6 +113,13 @@ export default function EventsPage() {
               </button>
             )}
             <p className="text-xs text-muted-foreground text-center mt-4">Requesting an invite does not reveal your profile to attendees.</p>
+             <div className="border-t mt-6 pt-5">
+               <h3 className="font-semibold text-sm flex items-center gap-2"><Sparkles size={15} className="text-primary" /> Who should I meet?</h3>
+               {eventXsects.isLoading && <p className="text-xs text-muted-foreground mt-3">Evaluating Event XSECTs…</p>}
+               {eventXsects.error instanceof NetworkApiError && eventXsects.error.status === 402 && <div className="rounded-xl bg-primary/5 border border-primary/15 p-4 mt-3"><p className="font-bold text-sm">{String(eventXsects.error.data.potentialXsects ?? 0)} potential Event XSECTs</p><p className="text-xs text-muted-foreground mt-1">Unlock protected recommendations and explanations with Pro+.</p><Link href="/plans" className="inline-block text-xs text-primary font-bold mt-2">View plans</Link></div>}
+               {eventXsects.data?.xsects.map((item) => <div key={item.xsectId} className="rounded-xl border p-3 mt-3"><div className="flex justify-between gap-2"><p className="text-sm font-bold">{item.counterpart.revealed ? item.counterpart.displayName : item.counterpart.handle}</p><span className="text-sm font-bold text-primary">{item.score}</span></div><p className="text-xs text-muted-foreground">{item.counterpart.role} · {item.counterpart.trustLevel} trust</p><p className="text-xs mt-2">{item.explanation[0]}</p></div>)}
+               {eventXsects.data?.count === 0 && <p className="text-xs text-muted-foreground mt-3">No relevant Event XSECTs are available yet.</p>}
+             </div>
              <div className="border-t mt-6 pt-5 space-y-4">
                <div className="flex items-center justify-between"><h3 className="font-semibold text-sm flex items-center gap-2"><Users size={15} /> Attendees ({detail?.attendees.length ?? selected.attendeeCount ?? 0})</h3><span className="text-[11px] text-muted-foreground">Protected identities</span></div>
                {detailQuery.isLoading ? <p className="text-xs text-muted-foreground">Loading attendee details…</p> : detail?.attendees.map((attendee) => <div key={attendee.id} className="flex justify-between text-xs"><span>{attendee.label}</span><span className="text-muted-foreground">{attendee.relevance?.status === 'available' ? `${attendee.relevance.score}% relevant` : 'Private'}</span></div>)}

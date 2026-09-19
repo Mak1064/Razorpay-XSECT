@@ -1,4 +1,6 @@
 import { CreateBillingCheckoutBody } from "@workspace/api-zod";
+import { db, planOverridesTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
 import { Router, type IRouter, type Request } from "express";
 import {
   createCheckout,
@@ -10,6 +12,7 @@ import {
   requireAuth,
   type AuthenticatedRequest,
 } from "../middlewares/requireAuth";
+import { PLAN_ENTITLEMENTS } from "../lib/entitlements";
 
 const router: IRouter = Router();
 
@@ -30,6 +33,18 @@ router.get("/billing/plans", async (_req, res, next) => {
 router.get("/billing/subscription", requireAuth, async (req, res, next) => {
   try {
     const { userId } = req as AuthenticatedRequest;
+    const override = (await db.select().from(planOverridesTable).where(eq(planOverridesTable.userId, userId)).limit(1))[0];
+    if (override) {
+      res.json({
+        plan: override.plan,
+        billingCycle: "monthly",
+        status: "demo_override",
+        currentPeriodEnd: null,
+        cancelAtPeriodEnd: false,
+        entitlements: PLAN_ENTITLEMENTS[override.plan],
+      });
+      return;
+    }
     res.json(await getSubscriptionForUser(userId));
   } catch (error) {
     next(error);

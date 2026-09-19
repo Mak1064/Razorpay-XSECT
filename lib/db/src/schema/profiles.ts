@@ -1,5 +1,8 @@
-import { pgTable, text, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, boolean, timestamp, jsonb, real, pgEnum, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
+
+export const profileTrustLevel = pgEnum("profile_trust_level", ["contact", "professional", "enhanced"]);
+export const profileVisibility = pgEnum("profile_visibility", ["discoverable", "trusted_only", "stealth", "ghost"]);
 
 export const professionalProfileTable = pgTable("professional_profiles", {
   userId: text("user_id").primaryKey(),
@@ -23,9 +26,19 @@ export const professionalProfileTable = pgTable("professional_profiles", {
   privacy: jsonb("privacy").$type<{ trustedConnectionsOnly: boolean; womenOnly: boolean; stealthMode: boolean; visibilitySchedule?: { start: string; end: string; timezone?: string }; fieldVisibility: Record<string, boolean> }>().notNull().default({ trustedConnectionsOnly: false, womenOnly: false, stealthMode: false, fieldVisibility: {} }),
   trustReputation: jsonb("trust_reputation").$type<{ score: number; completedConnections: number; endorsements: number }>().notNull().default({ score: 0, completedConnections: 0, endorsements: 0 }),
   onboardingComplete: boolean("onboarding_complete").notNull().default(false),
+  /** Approximate location. Precise values are never returned to other users; only distance bands / area labels are. */
+  city: text("city"),
+  area: text("area"),
+  approxLat: real("approx_lat"),
+  approxLng: real("approx_lng"),
+  trustLevel: profileTrustLevel("trust_level").notNull().default("contact"),
+  visibility: profileVisibility("visibility").notNull().default("discoverable"),
+  /** Intents the user is discoverable for while in stealth (want/offer categories). */
+  stealthIntents: jsonb("stealth_intents").$type<string[]>().notNull().default([]),
+  lastActiveAt: timestamp("last_active_at", { withTimezone: true }).notNull().defaultNow(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
-});
+}, (t) => [index("profiles_city_area_idx").on(t.city, t.area), index("profiles_visibility_idx").on(t.visibility), index("profiles_last_active_idx").on(t.lastActiveAt)]);
 
 export const insertProfessionalProfileSchema = createInsertSchema(professionalProfileTable).omit({ createdAt: true, updatedAt: true });
 export type ProfessionalProfile = typeof professionalProfileTable.$inferSelect;

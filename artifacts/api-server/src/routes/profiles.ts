@@ -1,5 +1,6 @@
 import { db, professionalProfileTable, type ProfessionalProfile } from "@workspace/db";
 import { eq } from "drizzle-orm";
+import { AREAS } from "../lib/geo";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { z } from "zod";
 import { requireAuth, type AuthenticatedRequest } from "../middlewares/requireAuth";
@@ -17,6 +18,8 @@ const profileInput = z.object({
   photoUrl: z.string().refine((v) => v.startsWith("/objects/") || v.startsWith("https://"), "photoUrl must be a private object path or HTTPS URL").nullable().optional(),
   company: z.string().trim().max(160).nullable().optional(),
   industry: z.string().trim().max(160).nullable().optional(),
+  city: z.string().trim().max(120).nullable().optional(),
+  area: z.string().trim().max(120).nullable().optional(),
   identity: z.object({ pronouns: z.string().max(60).optional(), location: z.string().max(160).optional(), ageRange: z.string().max(40).optional() }).default({}),
   experience: z.array(z.object({ title: item, company: item, startYear: z.number().int().min(1900).max(2200).optional(), endYear: z.number().int().min(1900).max(2200).optional(), description: z.string().max(1000).optional() })).max(20).default([]),
   links: z.array(z.object({ label: item, url: z.string().url().refine((v) => v.startsWith("https://"), "links must use HTTPS") })).max(20).default([]),
@@ -49,6 +52,8 @@ export function projectProfessionalProfile(profile: ProfessionalProfile, viewerI
     role: visible("role") ? profile.role : null,
     company: visible("company") ? profile.company : null,
     industry: visible("industry") ? profile.industry : null,
+    city: profile.city,
+    area: profile.area,
     skills: visible("skills") ? profile.skills : [],
     wants: visible("wants") ? profile.wants : [],
     offers: visible("offers") ? profile.offers : [],
@@ -59,6 +64,11 @@ export function projectProfessionalProfile(profile: ProfessionalProfile, viewerI
 async function getProfile(userId: string) {
   return (await db.select().from(professionalProfileTable).where(eq(professionalProfileTable.userId, userId)).limit(1))[0];
 }
+
+/** Public list of supported cities/areas (area labels + centroids are public place data, never user locations). */
+router.get("/areas", (_req, res) => {
+  res.json({ areas: AREAS.map(({ city, area }) => ({ city, area })) });
+});
 
 router.get("/profile", async (req, res, next) => {
   try { res.json({ profile: await getProfile(actor(req)) ?? null }); } catch (e) { next(e); }

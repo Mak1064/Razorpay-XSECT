@@ -20,7 +20,7 @@ export interface StoreState {
   // Plans
   plan: 'free' | 'pro' | 'pro_plus';
   billingCycle: 'monthly' | 'annual';
-  billingStatus: 'free' | 'trialing' | 'active' | 'past_due' | 'canceled' | 'unpaid' | 'incomplete' | 'paused';
+  billingStatus: 'free' | 'trialing' | 'active' | 'past_due' | 'canceled' | 'unpaid' | 'incomplete' | 'paused' | 'demo_override';
   currentPeriodEnd: string | null;
   cancelAtPeriodEnd: boolean;
   entitlements: string[];

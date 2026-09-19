@@ -1,0 +1,16 @@
+import { Link } from 'wouter';
+import { Flame, MapPinned, Users } from 'lucide-react';
+import { NetworkApiError, useOpportunityMap, type MapCluster } from '../hooks/use-network';
+
+export default function OpportunityMap({ city = '' }: { city?: string }) {
+  const query = useOpportunityMap(city);
+  if (query.isLoading) return <div className="p-8 text-sm text-muted-foreground">Loading Opportunity Map…</div>;
+  if (query.error instanceof NetworkApiError && query.error.status === 402) return <div className="border rounded-2xl p-8 bg-white"><MapPinned className="text-primary mb-3" /><h2 className="text-xl font-bold">Unlock Opportunity Map</h2><p className="text-sm text-muted-foreground mt-2">See anonymized demand, supply, and hot XSECT clusters without exposing anyone's location.</p><Link href="/plans" className="inline-block mt-4 rounded-lg bg-primary text-primary-foreground px-4 py-2 text-sm font-bold">View Pro+ plans</Link></div>;
+  if (query.isError) return <p className="p-6 text-sm text-destructive">{query.error.message}</p>;
+  const grouped = (query.data?.clusters ?? []).reduce<Record<string, MapCluster[]>>((groups, cluster) => {
+    (groups[cluster.city] ??= []).push(cluster);
+    return groups;
+  }, {});
+  return <section><div className="mb-5"><p className="text-xs font-mono-custom uppercase text-primary">Opportunity Map</p><h2 className="text-2xl font-bold mt-2">Anonymized opportunity clusters</h2></div>{Object.entries(grouped).map(([groupCity, clusters]) => <div key={groupCity} className="mb-8"><h3 className="font-bold mb-3">{groupCity}</h3><div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">{clusters?.map((cluster) => { const demand = Object.values(cluster.wantsByCategory).reduce((a, b) => a + b, 0); const supply = Object.values(cluster.offersByCategory).reduce((a, b) => a + b, 0); const max = Math.max(1, demand, supply); return <article key={cluster.area} className={`bg-white border rounded-2xl p-5 ${cluster.hotXsects ? 'border-primary shadow-sm' : ''}`}><div className="flex justify-between"><h4 className="font-bold">{cluster.area}</h4>{cluster.hotXsects > 0 && <span className="text-xs text-primary flex items-center gap-1"><Flame size={12} />{cluster.hotXsects} hot</span>}</div><p className="text-xs text-muted-foreground flex items-center gap-1 mt-1"><Users size={12} />{cluster.activeUsers} active this week</p><div className="mt-4 grid gap-2 text-xs"><Bar label="Demand" value={demand} max={max} /><Bar label="Supply" value={supply} max={max} /></div><div className="mt-4"><p className="text-[10px] uppercase font-mono-custom text-muted-foreground">Top gaps</p>{cluster.gaps.filter((gap) => gap.gap > 0).map((gap) => <p key={gap.category} className="text-xs mt-1">{gap.category}: {gap.gap} unmet</p>)}</div></article>; })}</div></div>)}</section>;
+}
+function Bar({ label, value, max }: { label: string; value: number; max: number }) { return <div><div className="flex justify-between"><span>{label}</span><span>{value}</span></div><div className="h-1.5 rounded bg-secondary mt-1 overflow-hidden"><div className="h-full bg-primary" style={{ width: `${value / max * 100}%` }} /></div></div>; }

@@ -19,4 +19,8 @@
 
 export * from "./billing-users";
 export * from "./social";
-export * from "./profiles";
+export * from "./profiles";export * from "./opportunities";
+export * from "./xsects";
+export * from "./network";
+export * from "./ai";
+export * from "./platform";

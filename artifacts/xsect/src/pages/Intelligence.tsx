@@ -1,141 +1,36 @@
-import { useStore } from '../store';
-import { useState } from 'react';
-import { Sparkles, ArrowRight, ShieldCheck, Workflow, Lock } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { ArrowRight, Bot, Pause, Play, Sparkles, Trash2 } from 'lucide-react';
 import { Link } from 'wouter';
+import { ApiError, useAgentFindings, useAgents, useAiHistory, useAskIntelligence, useCreateAgent, useRunAgent, useUpdateAgent, type AiQuery } from '../hooks/use-ai';
 
-const intelligenceQueries = [
-  "Are there emerging clusters of frontend engineers near me?",
-  "Show me paths to Series A founders looking for technical co-founders.",
-  "What's the current demand signal for Go vs Rust in my area?",
-  "Find intersections where my skills match their immediate intent."
-];
+const prompts=['Who should I meet this week?','Any investors near me?','Best XSECTs for my current Wants?'];
+const hrefFor=(kind:string,id:string)=>kind==='xsect'?`/xsects?xsect=${id.replace('x:','')}`:kind==='path'?`/paths?path=${id.replace('p:','')}`:kind==='event'?`/events?event=${id.replace('e:','')}`:kind==='alert'?'/alerts':'/xsects';
 
-export default function Intelligence() {
-  const { state } = useStore();
-  const [query, setQuery] = useState('');
-  const [response, setResponse] = useState<string|null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  const isProPlus = state.plan === 'pro_plus';
-
-  const handleQuery = (q: string) => {
-    if (!isProPlus) return;
-    setQuery(q);
-    setIsProcessing(true);
-    setResponse(null);
-    setTimeout(() => {
-      setIsProcessing(false);
-      setResponse("Based on your network orbit, I found 4 meaningful intersections regarding enterprise solar companies. Two of them share a trusted node with you. The strongest timing signal is a VP of Product who recently updated their intent to 'exploring utility-scale distribution.'");
-    }, 1500);
-  };
-
-  if (!isProPlus) {
-    return (
-      <div className="p-6 md:p-10 max-w-4xl mx-auto flex flex-col items-center justify-center min-h-[80vh] text-center">
-        <div className="w-24 h-24 rounded-full bg-secondary flex items-center justify-center mb-8 relative">
-          <div className="absolute top-0 right-0 w-8 h-8 bg-background border-4 border-background rounded-full flex items-center justify-center -translate-y-2 translate-x-2">
-            <Lock size={14} className="text-muted-foreground" />
-          </div>
-          <Sparkles size={40} className="text-foreground relative z-10" />
-        </div>
-        
-        <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">Read between the signals.</h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mb-12 text-balance leading-relaxed">
-          XSECT Intelligence connects the dots your radar can't show at a glance. Surface hidden clusters, emerging themes, and the most useful paths through your network.
-        </p>
-
-        <div className="grid sm:grid-cols-3 gap-6 mb-12 max-w-3xl w-full text-left">
-          <div className="bg-white p-6 rounded-2xl border border-border shadow-sm">
-            <Sparkles className="text-accent mb-4" size={24}/>
-            <h3 className="font-bold mb-2 text-foreground">Pattern Recognition</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">Ask natural questions about the shape of your network orbit.</p>
-          </div>
-          <div className="bg-white p-6 rounded-2xl border border-border shadow-sm">
-            <ShieldCheck className="text-primary mb-4" size={24}/>
-            <h3 className="font-bold mb-2 text-foreground">Zero Exposure</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">AI answers maintain strict privacy boundaries until consent.</p>
-          </div>
-          <div className="bg-white p-6 rounded-2xl border border-border shadow-sm">
-            <Workflow className="text-foreground mb-4" size={24}/>
-            <h3 className="font-bold mb-2 text-foreground">Timing Edge</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">Detect shifts in intent before they become obvious.</p>
-          </div>
-        </div>
-
-        <Link href="/plans" className="px-8 py-4 bg-foreground text-background rounded-md font-bold hover:bg-foreground/90 transition-all flex items-center gap-2">
-          Unlock Pro+ Intelligence <ArrowRight size={18} />
-        </Link>
+function IntelligenceChat(){
+  const history=useAiHistory(); const ask=useAskIntelligence(); const [prompt,setPrompt]=useState(''); const [local,setLocal]=useState<AiQuery[]>([]);
+  const messages=useMemo(()=>{const rows=[...(history.data?.history??[])].reverse().concat(local);return rows.filter((row,index)=>rows.findIndex(other=>other.id===row.id)===index)},[history.data?.history,local]);
+  const quota=history.data?.quota; const exhausted=quota?.dailyLimit!=null&&(quota.used??0)>=quota.dailyLimit;
+  const send=async(value:string)=>{const clean=value.trim();if(!clean)return;try{const result=await ask.mutateAsync(clean);setLocal(current=>[...current,result.query]);setPrompt('');}catch{/* rendered below */}};
+  return <div className="grid lg:grid-cols-[1fr_280px] gap-6">
+    <div className="min-w-0">
+      <div className="space-y-4 mb-6 max-h-[54vh] overflow-y-auto pr-1">
+        {!messages.length&&<div className="bg-white border border-border rounded-2xl p-8"><Sparkles className="text-primary mb-4"/><h2 className="text-xl font-bold">Ask what is crossing your path.</h2><p className="text-muted-foreground mt-2">Answers are grounded in your live XSECTs, Paths, events, Wants, and protected professional signals.</p></div>}
+        {messages.map(message=><div key={message.id} className="space-y-3"><div className="ml-auto max-w-[85%] bg-foreground text-background rounded-2xl rounded-br-sm px-5 py-3 text-sm">{message.prompt}</div><div className="bg-white border border-border rounded-2xl rounded-tl-sm p-5 shadow-sm"><div className="flex gap-3"><Sparkles size={18} className="text-primary shrink-0 mt-0.5"/><p className="leading-relaxed">{message.answer}</p></div>{message.citations.length>0&&<div className="flex flex-wrap gap-2 mt-4">{message.citations.map((c,i)=><Link key={`${c.id}-${i}`} href={hrefFor(c.kind,c.id)} title={c.reason} className="px-3 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-mono-custom uppercase">{c.kind} · {c.id}</Link>)}</div>}{message.suggestedActions?.length?<div className="flex flex-wrap gap-2 mt-4">{message.suggestedActions.map(a=><Link key={`${a.href}-${a.label}`} href={a.href} className="px-3 py-2 bg-foreground text-background rounded-lg text-xs font-bold">{a.label}</Link>)}</div>:null}</div></div>)}
       </div>
-    );
-  }
-
-  return (
-    <div className="p-6 md:p-10 max-w-4xl mx-auto h-full flex flex-col">
-      <header className="mb-10">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="w-1.5 h-1.5 rounded-full bg-accent"></span>
-          <span className="font-mono-custom text-xs font-semibold uppercase tracking-widest text-accent">Signal Layer</span>
-        </div>
-        <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4 tracking-tight">What do you want to know?</h1>
-      </header>
-
-      <div className="flex-1 flex flex-col max-w-3xl">
-        <div className="relative mb-8">
-          <textarea
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Ask about themes, clusters, or specific paths in your network..."
-            className="w-full bg-white border border-border rounded-2xl p-6 pb-16 text-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all resize-none shadow-sm"
-            rows={4}
-          />
-          <button 
-            onClick={() => handleQuery(query)}
-            disabled={!query || isProcessing}
-            className="absolute bottom-4 right-4 bg-foreground text-background px-6 py-2 rounded-lg font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-foreground/90 transition-colors"
-          >
-            {isProcessing ? 'Reading Signal...' : 'Ask AI'} <ArrowRight size={16}/>
-          </button>
-        </div>
-
-        {!response && !isProcessing && (
-          <div className="grid gap-3 fade-in">
-            <span className="font-mono-custom font-semibold text-xs uppercase text-muted-foreground mb-2">Suggested Queries</span>
-            {intelligenceQueries.map((q,i) => (
-              <button key={i} onClick={() => handleQuery(q)} className="text-left p-4 rounded-xl bg-white border border-border hover:border-primary/50 transition-colors text-sm text-foreground shadow-sm">
-                {q}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {isProcessing && (
-          <div className="flex-1 flex items-center justify-center fade-in">
-            <div className="flex flex-col items-center gap-4 text-muted-foreground">
-              <Sparkles size={32} className="animate-[pulse_1.5s_ease-in-out_infinite] text-primary" />
-              <div className="font-mono-custom text-xs font-medium uppercase tracking-widest animate-pulse">Scanning orbit...</div>
-            </div>
-          </div>
-        )}
-
-        {response && (
-          <div className="bg-white border border-border shadow-sm rounded-2xl p-8 fade-in relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-1 h-full bg-primary"></div>
-            <div className="flex items-start gap-4">
-              <Sparkles className="text-primary shrink-0 mt-1" size={20} />
-              <div>
-                <p className="text-lg leading-relaxed text-foreground mb-6">{response}</p>
-                <div className="flex flex-wrap gap-3">
-                  <span className="px-3 py-1.5 bg-secondary rounded-md text-xs font-mono-custom font-medium">4 Intersections</span>
-                  <span className="px-3 py-1.5 bg-primary/10 text-primary rounded-md text-xs font-mono-custom font-medium">Active Timing</span>
-                  <button className="px-4 py-1.5 bg-foreground text-background rounded-md text-xs font-medium ml-auto hover:bg-foreground/90 transition-colors">
-                    View Paths
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      <div className="relative"><textarea value={prompt} onChange={e=>setPrompt(e.target.value)} rows={3} maxLength={2000} placeholder="Ask XSECT Intelligence…" className="w-full bg-white border border-border rounded-2xl p-5 pb-14 resize-none focus:outline-none focus:ring-2 focus:ring-primary/20"/><button onClick={()=>send(prompt)} disabled={!prompt.trim()||ask.isPending||exhausted} className="absolute right-3 bottom-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-bold text-sm flex items-center gap-2 disabled:opacity-50">{ask.isPending?'Reading signals…':'Ask'}<ArrowRight size={15}/></button></div>
+      {ask.error&&<div className="mt-3 p-4 rounded-xl border border-destructive/20 bg-destructive/5 text-sm"><p className="text-destructive">{ask.error.message}</p>{ask.error instanceof ApiError&&ask.error.status===402&&<Link href="/plans" className="inline-block mt-2 font-bold text-primary">Upgrade to XSECT Pro →</Link>}</div>}
     </div>
-  );
+    <aside className="space-y-5"><div className="bg-white border border-border rounded-2xl p-5"><span className="font-mono-custom uppercase text-xs text-muted-foreground">Daily Intelligence</span><div className="mt-3 text-2xl font-bold">{quota?.dailyLimit==null?'Unlimited':`${quota?.used??0} / ${quota.dailyLimit}`}</div><p className="text-xs text-muted-foreground mt-1 capitalize">{quota?.plan??'—'} plan</p>{exhausted&&<Link href="/plans" className="block text-center mt-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-bold">Unlock unlimited</Link>}</div><div><p className="font-mono-custom uppercase text-xs text-muted-foreground mb-3">Try asking</p><div className="space-y-2">{prompts.map(p=><button key={p} onClick={()=>send(p)} disabled={ask.isPending||exhausted} className="w-full text-left bg-white border border-border rounded-xl p-3 text-sm hover:border-primary/50 disabled:opacity-50">{p}</button>)}</div></div></aside>
+  </div>;
 }
+
+function AgentFindings({id}:{id:string}){const {data,isLoading}=useAgentFindings(id);if(isLoading)return <p className="text-sm text-muted-foreground">Loading findings…</p>;if(!data?.findings.length)return <p className="text-sm text-muted-foreground">No grounded findings yet. Run this Agent after adding relevant Wants and Offers.</p>;return <div className="space-y-3">{data.findings.map(f=><Link key={f.id} href={f.xsectId?`/xsects?xsect=${f.xsectId}`:'/opportunities'} className="block border border-border rounded-xl p-4 hover:border-primary/50"><div className="flex justify-between gap-3"><div><strong>{f.target?.revealed?f.target.displayName:f.target?.handle||f.opportunity?.title||'Protected opportunity'}</strong><p className="text-sm text-muted-foreground mt-1">{f.reason}</p>{f.opportunity?.organization&&<p className="text-xs text-muted-foreground mt-1">{f.opportunity.organization.name}</p>}</div><span className="font-mono-custom font-bold text-primary">{f.score}</span></div></Link>)}</div>}
+
+function Agents(){
+  const agents=useAgents();const create=useCreateAgent();const run=useRunAgent();const update=useUpdateAgent();const [intent,setIntent]=useState('');const [open,setOpen]=useState<string|null>(null);
+  if(agents.isLoading)return <p className="text-muted-foreground">Loading XSECT Agents…</p>;
+  if(!agents.data?.entitlement)return <div className="bg-white border border-border rounded-2xl p-8 text-center"><Bot size={36} className="mx-auto text-primary mb-4"/><h2 className="text-2xl font-bold">Persistent opportunity discovery.</h2><p className="text-muted-foreground mt-2 max-w-xl mx-auto">XSECT AI Agent turns your sentence into structured intent and monitors real, privacy-safe signals. Available with Pro+.</p><Link href="/plans" className="inline-block mt-6 px-5 py-3 bg-foreground text-background rounded-lg font-bold">Explore Pro+</Link></div>;
+  return <div className="grid lg:grid-cols-[360px_1fr] gap-6"><div><div className="bg-white border border-border rounded-2xl p-5"><h2 className="font-bold text-lg">Create an AI Agent</h2><p className="text-sm text-muted-foreground mt-1">Describe the professional opportunity you want monitored.</p><textarea value={intent} onChange={e=>setIntent(e.target.value)} rows={5} placeholder="I'm looking for a Series A startup where I can lead growth." className="w-full mt-4 p-3 border border-border rounded-xl resize-none"/><button onClick={async()=>{const result=await create.mutateAsync(intent);setIntent('');setOpen(result.agent.id)}} disabled={!intent.trim()||create.isPending} className="w-full mt-3 py-2.5 bg-primary text-primary-foreground rounded-lg font-bold disabled:opacity-50">{create.isPending?'Structuring intent…':'Create Agent'}</button>{create.error&&<p className="text-sm text-destructive mt-3">{create.error.message}</p>}</div><p className="text-xs text-muted-foreground mt-3">Up to three active or paused Agents. Agents never take external action without confirmation.</p></div><div className="space-y-4">{agents.data.agents.filter(a=>a.status!=='archived').map(agent=><section key={agent.id} className="bg-white border border-border rounded-2xl p-5"><div className="flex flex-wrap justify-between gap-3"><div><span className="font-mono-custom uppercase text-xs text-primary">{agent.status} · {agent.findingCount} findings</span><h3 className="font-bold mt-1">{agent.rawIntent}</h3></div><div className="flex gap-2"><button onClick={()=>run.mutate(agent.id)} disabled={agent.status!=='active'||run.isPending} title="Run now" className="p-2 border rounded-lg"><Play size={16}/></button><button onClick={()=>update.mutate({id:agent.id,status:agent.status==='paused'?'active':'paused'})} title={agent.status==='paused'?'Resume':'Pause'} className="p-2 border rounded-lg">{agent.status==='paused'?<Play size={16}/>:<Pause size={16}/>}</button><button onClick={()=>update.mutate({id:agent.id,status:'archived'})} title="Archive" className="p-2 border rounded-lg text-destructive"><Trash2 size={16}/></button></div></div><div className="flex flex-wrap gap-2 mt-4">{Object.entries(agent.structured).flatMap(([key,value])=>Array.isArray(value)?value.map(v=>`${key}: ${v}`):value?[`${key}: ${value}`]:[]).map(value=><span key={value} className="px-2.5 py-1 bg-secondary rounded-full text-xs">{value}</span>)}</div><button onClick={()=>setOpen(open===agent.id?null:agent.id)} className="text-sm font-bold text-primary mt-4">{open===agent.id?'Hide findings':'View findings'}</button>{open===agent.id&&<div className="mt-4 pt-4 border-t"><AgentFindings id={agent.id}/></div>}</section>)}{!agents.data.agents.filter(a=>a.status!=='archived').length&&<div className="border border-dashed border-border rounded-2xl p-8 text-center text-muted-foreground">No active XSECT Agents yet.</div>}</div></div>;
+}
+
+export default function Intelligence(){const [tab,setTab]=useState<'intelligence'|'agent'>('intelligence');return <div className="p-6 md:p-10 max-w-6xl mx-auto"><header className="mb-8"><div className="flex items-center gap-2 text-primary font-mono-custom uppercase text-xs tracking-widest mb-3"><Sparkles size={14}/> Signal layer</div><h1 className="text-4xl md:text-5xl font-bold tracking-tight">XSECT Intelligence</h1><p className="text-muted-foreground mt-3">Grounded answers from the professional signals already crossing your path.</p></header><div className="flex gap-2 border-b border-border mb-7"><button onClick={()=>setTab('intelligence')} className={`px-4 py-3 text-sm font-bold border-b-2 ${tab==='intelligence'?'border-primary text-primary':'border-transparent text-muted-foreground'}`}>Intelligence</button><button onClick={()=>setTab('agent')} className={`px-4 py-3 text-sm font-bold border-b-2 ${tab==='agent'?'border-primary text-primary':'border-transparent text-muted-foreground'}`}>AI Agent</button></div>{tab==='intelligence'?<IntelligenceChat/>:<Agents/>}</div>}

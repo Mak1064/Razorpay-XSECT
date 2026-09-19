@@ -5,18 +5,24 @@ import { useActivity } from '../lib/activity';
 import { useUser } from '@clerk/react';
 import { 
   Radar, Compass, Layers3, Network, Bot, Calendar, MessageSquare, 
-  Menu, X, Bell, CheckCheck
+  Menu, X, Bell, CheckCheck, Target, Building2, Route as RouteIcon, BellRing, ShieldCheck
 } from 'lucide-react';
+import { useIsAdmin } from '../hooks/use-admin';
 
-const navItems = [
+const baseNavItems = [
   { href: '/radar', label: 'Radar', icon: Radar },
   { href: '/discover', label: 'Discover', icon: Compass },
-  { href: '/xsects', label: 'Archive', icon: Layers3 },
+  { href: '/xsects', label: 'XSECTs', icon: Layers3 },
   { href: '/network', label: 'Network', icon: Network },
-  { href: '/events', label: 'Events', icon: Calendar },
-  { href: '/messages', label: 'Messages', icon: MessageSquare },
   { href: '/ai', label: 'Intelligence', icon: Bot },
+  { href: '/opportunities', label: 'Wants & Offers', icon: Target },
+  { href: '/paths', label: 'Paths', icon: RouteIcon },
+  { href: '/alerts', label: 'Alerts', icon: BellRing },
+  { href: '/events', label: 'Events', icon: Calendar },
+  { href: '/organizations', label: 'Organizations', icon: Building2 },
+  { href: '/messages', label: 'Messages', icon: MessageSquare },
 ];
+const adminItem = { href: '/admin', label: 'Admin', icon: ShieldCheck };
 
 export default function Shell({ children }: { children: ReactNode }) {
   const [location] = useLocation();
@@ -25,6 +31,8 @@ export default function Shell({ children }: { children: ReactNode }) {
   const { state } = useStore();
   const { user } = useUser();
   const activity = useActivity(user?.id);
+  const isAdmin = useIsAdmin();
+  const navItems = isAdmin ? [...baseNavItems, adminItem] : baseNavItems;
 
   const profileName = state.profile?.name || user?.fullName || 'User';
   const initial = profileName.charAt(0);

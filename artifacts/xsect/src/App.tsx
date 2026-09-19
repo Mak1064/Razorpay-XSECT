@@ -25,6 +25,12 @@ import MessagesPage from './pages/Messages';
 import Profile from './pages/Profile';
 import Plans from './pages/Plans';
 import NotFound from './pages/not-found';
+import Opportunities from './pages/Opportunities';
+import Organizations from './pages/Organizations';
+import OrganizationDetail from './pages/OrganizationDetail';
+import Paths from './pages/Paths';
+import Alerts from './pages/Alerts';
+import Admin from './pages/Admin';
 import { useProfile } from './hooks/use-profile';
 
 const queryClient = new QueryClient();
@@ -209,6 +215,12 @@ function AppRoutes() {
               <Route path="/messages" component={() => <Shell><MessagesPage /></Shell>} />
               <Route path="/profile" component={() => <Shell><Profile /></Shell>} />
               <Route path="/plans" component={() => <Shell><Plans /></Shell>} />
+              <Route path="/opportunities" component={() => <Shell><Opportunities /></Shell>} />
+              <Route path="/organizations" component={() => <Shell><Organizations /></Shell>} />
+              <Route path="/organizations/:id" component={() => <Shell><OrganizationDetail /></Shell>} />
+              <Route path="/paths" component={() => <Shell><Paths /></Shell>} />
+              <Route path="/alerts" component={() => <Shell><Alerts /></Shell>} />
+              <Route path="/admin" component={() => <Shell><Admin /></Shell>} />
               <Route component={() => <Shell><NotFound /></Shell>} />
             </Switch>
           )}
