@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "XSECT Opportunity Network"
+description = "A premium mobile-first opportunity intelligence network that surfaces meaningful intersections between professional intent, people, timing, place, and trusted networks."
+version = "1.0.0"
+id = "artifacts/xsect"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20021
+
+[services.development]
+run = "pnpm --filter @workspace/xsect run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/xsect", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/xsect/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20021"
+BASE_PATH = "/"
