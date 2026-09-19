@@ -47,7 +47,7 @@ export default function Landing() {
             </h1>
             
             <p className="text-xl text-white/90 mb-10 leading-relaxed max-w-xl font-medium [text-shadow:0_2px_12px_rgba(0,0,0,0.95)]" data-testid="text-hero-subtitle">
-              Meet the right people when timing matters. XSECT connects what you can do, what you need, and who is nearby—while keeping every identity private until both sides choose to connect.
+              Meet the right professionals when opportunity and timing align. XSECT connects people whose expertise, goals, and proximity complement one another—while keeping both identities private until there is mutual interest.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4">
@@ -119,6 +119,31 @@ export default function Landing() {
                     <Activity size={16} className="text-primary" />
                     <span className="text-sm font-bold text-white tracking-wide">Intent Aligned</span>
                     <span className="text-xs text-white/60 font-mono-custom border-l border-white/20 pl-3">Dist: ~1.2km</span>
+                  </div>
+                </div>
+
+                {/* Match explanation */}
+                <div className="relative z-10">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-[10px] font-mono-custom uppercase tracking-[0.18em] text-white/55 font-semibold">Why this surfaced</span>
+                    <div className="h-px flex-1 bg-white/15" />
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 md:gap-3">
+                    <div className="glass-card rounded-xl p-3 md:p-4">
+                      <div className="text-primary text-lg md:text-xl font-bold mb-1">92%</div>
+                      <div className="text-white text-[11px] md:text-xs font-semibold">Intent fit</div>
+                      <div className="text-white/45 text-[9px] md:text-[10px] mt-1">Goals overlap now</div>
+                    </div>
+                    <div className="glass-card rounded-xl p-3 md:p-4">
+                      <div className="text-blue-400 text-lg md:text-xl font-bold mb-1">2</div>
+                      <div className="text-white text-[11px] md:text-xs font-semibold">Trusted paths</div>
+                      <div className="text-white/45 text-[9px] md:text-[10px] mt-1">Mutual network nodes</div>
+                    </div>
+                    <div className="glass-card rounded-xl p-3 md:p-4">
+                      <div className="text-emerald-400 text-lg md:text-xl font-bold mb-1">5 days</div>
+                      <div className="text-white text-[11px] md:text-xs font-semibold">Timing window</div>
+                      <div className="text-white/45 text-[9px] md:text-[10px] mt-1">Both actively looking</div>
+                    </div>
                   </div>
                 </div>
 
