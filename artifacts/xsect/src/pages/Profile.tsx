@@ -1,11 +1,16 @@
 import { useStore } from '../store';
 import { useState } from 'react';
-import { ShieldCheck, Edit3, Check, EyeOff, Target, Lock } from 'lucide-react';
+import { ShieldCheck, Edit3, Check, Target, Lock, LogOut } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useClerk, useUser } from '@clerk/react';
+import { useLocation } from 'wouter';
 
 export default function Profile() {
-  const { state, updateProfile } = useStore();
+  const { state, updateProfile, setLocationTrackingStatus } = useStore();
   const { toast } = useToast();
+  const { signOut } = useClerk();
+  const { user } = useUser();
+  const [, setLocation] = useLocation();
   const [isEditing, setIsEditing] = useState(false);
   const [editIntent, setEditIntent] = useState(state.profile?.intent || '');
 
@@ -15,57 +20,78 @@ export default function Profile() {
     toast({ title: "Profile Updated", description: "Your signal has been recalibrated." });
   };
 
+  const handleSignOut = async () => {
+    // Clear in-memory geolocation watch if any when signing out
+    setLocationTrackingStatus('idle', null);
+    await signOut();
+    setLocation('/');
+  };
+
+  const profileName = state.profile?.name || user?.fullName || 'Anonymous';
+  const initial = profileName.charAt(0);
+
   return (
-    <div className="p-6 md:p-10 max-w-5xl mx-auto reveal">
-      <header className="mb-12 border-b border-border pb-8 flex justify-between items-end">
+    <div className="p-6 md:p-10 max-w-5xl mx-auto h-full">
+      <header className="mb-10 border-b border-border pb-8 flex flex-col md:flex-row justify-between md:items-end gap-4">
         <div>
           <div className="flex items-center gap-2 mb-3">
             <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
-            <span className="font-mono-custom text-xs uppercase tracking-widest text-primary">Your Signal</span>
+            <span className="font-mono-custom text-xs font-semibold uppercase tracking-widest text-primary">Your Signal</span>
           </div>
-          <h1 className="font-serif text-4xl md:text-5xl text-foreground">Make your intent legible.</h1>
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight">Make your intent legible.</h1>
         </div>
-        <button 
-          onClick={() => isEditing ? handleSave() : setIsEditing(true)}
-          className="px-6 py-3 bg-white/5 border border-border rounded-xl text-sm font-medium hover:bg-white/10 transition-colors flex items-center gap-2"
-        >
-          {isEditing ? <><Check size={16}/> Save Changes</> : <><Edit3 size={16}/> Edit Signal</>}
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+            className="px-6 py-2.5 bg-white border border-border rounded-lg text-sm font-bold hover:bg-secondary transition-colors flex items-center gap-2 shadow-sm text-foreground"
+          >
+            {isEditing ? <><Check size={16}/> Save</> : <><Edit3 size={16}/> Edit Signal</>}
+          </button>
+          <button 
+            onClick={handleSignOut}
+            className="px-4 py-2.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+          >
+            <LogOut size={16}/> Sign out
+          </button>
+        </div>
       </header>
 
       <div className="grid lg:grid-cols-[1fr_1.5fr] gap-8">
         {/* Left Column: Identity Card */}
-        <div className="bg-card border border-border rounded-3xl p-8 h-fit">
-          <div className="flex items-center gap-4 mb-8 pb-8 border-b border-white/5">
-            <div className="w-20 h-20 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary font-serif text-3xl font-bold">
-              {state.profile?.name?.charAt(0) || 'U'}
+        <div className="bg-white border border-border rounded-2xl p-8 h-fit shadow-sm">
+          <div className="flex items-center gap-4 mb-8 pb-8 border-b border-border">
+            <div className="w-20 h-20 rounded-full bg-secondary border border-border flex items-center justify-center text-foreground text-3xl font-bold">
+              {initial}
             </div>
             <div>
-              <h2 className="font-serif text-2xl text-foreground mb-1">{state.profile?.name}</h2>
-              <p className="text-sm text-muted-foreground">{state.profile?.role}</p>
+              <h2 className="text-2xl font-bold text-foreground mb-1">{profileName}</h2>
+              <p className="text-sm text-muted-foreground font-medium">{state.profile?.role || 'Unspecified Role'}</p>
             </div>
           </div>
           
           <div className="space-y-6">
             <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">Privacy Mode</span>
-              <span className="flex items-center gap-1.5 text-primary font-mono-custom uppercase text-[10px]"><ShieldCheck size={14}/> {state.profile?.privacyLevel}</span>
+              <span className="text-muted-foreground font-medium">Privacy Mode</span>
+              <span className="flex items-center gap-1.5 text-primary font-mono-custom font-semibold uppercase text-[10px]"><ShieldCheck size={14}/> {state.profile?.privacyLevel || 'Balanced'}</span>
             </div>
             <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">Location Baseline</span>
-              <span className="text-foreground">{state.profile?.location}</span>
+              <span className="text-muted-foreground font-medium">Account Email</span>
+              <span className="text-foreground">{user?.primaryEmailAddress?.emailAddress || 'hidden'}</span>
             </div>
             <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">Signal Completeness</span>
-              <span className="font-mono-custom text-primary">84%</span>
+              <span className="text-muted-foreground font-medium">Current Plan</span>
+              <span className="font-mono-custom font-medium uppercase text-xs px-2 py-0.5 bg-secondary rounded">{state.plan}</span>
             </div>
             
-            <div className="bg-primary/5 rounded-xl p-4 border border-primary/10 mt-8">
-              <div className="flex items-center gap-2 text-xs font-mono-custom uppercase text-primary mb-2">
+            <div className="bg-secondary/50 rounded-xl p-4 border border-border mt-8">
+              <div className="flex items-center gap-2 text-xs font-mono-custom font-semibold uppercase text-muted-foreground mb-2">
                 <Lock size={12}/> How you appear
               </div>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Others see you as "Protected Professional". Your exact role, company, and name are hidden until you accept a connection request.
+              <p className="text-[11px] text-muted-foreground leading-relaxed font-medium">
+                {state.profile?.privacyLevel === 'strict' && "Only intent and skills visible. Role and name hidden until accepted."}
+                {state.profile?.privacyLevel === 'balanced' && "Role category visible. Name hidden until accepted."}
+                {state.profile?.privacyLevel === 'open' && "Role and initial visible to nearby matches."}
+                {!state.profile?.privacyLevel && "Protected. Exact role, company, and name are hidden until you accept a request."}
               </p>
             </div>
           </div>
@@ -73,42 +99,44 @@ export default function Profile() {
 
         {/* Right Column: Intent & Skills */}
         <div className="space-y-6">
-          <div className="bg-card border border-border rounded-3xl p-8">
-            <div className="flex items-center gap-2 text-muted-foreground mb-4 font-mono-custom text-xs uppercase tracking-widest">
-              <Target size={16} className="text-accent" /> Current Intent
+          <div className="bg-white border border-border rounded-2xl p-8 shadow-sm">
+            <div className="flex items-center gap-2 text-muted-foreground mb-6 font-mono-custom text-xs font-semibold uppercase tracking-widest">
+              <Target size={16} className="text-primary" /> Current Intent
             </div>
             
             {isEditing ? (
               <textarea 
                 value={editIntent}
                 onChange={e => setEditIntent(e.target.value)}
-                className="w-full bg-background border border-primary/50 rounded-xl p-4 text-foreground text-lg focus:outline-none resize-none font-serif"
+                className="w-full bg-background border border-primary/50 rounded-xl p-4 text-foreground text-lg focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
                 rows={4}
               />
             ) : (
-              <h3 className="font-serif text-3xl text-foreground leading-snug">
+              <h3 className="text-2xl md:text-3xl font-bold text-foreground leading-snug">
                 {state.profile?.intent || 'No intent set.'}
               </h3>
             )}
             
-            <div className="mt-8 pt-8 border-t border-white/5">
-              <div className="text-xs text-muted-foreground font-mono-custom uppercase tracking-widest mb-4">Core Competencies</div>
+            <div className="mt-8 pt-8 border-t border-border">
+              <div className="text-xs text-muted-foreground font-mono-custom font-semibold uppercase tracking-widest mb-4">Core Competencies</div>
               <div className="flex flex-wrap gap-2">
-                {state.profile?.skills?.map(s => (
-                  <span key={s} className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-sm text-foreground">
+                {state.profile?.skills?.length ? state.profile.skills.map(s => (
+                  <span key={s} className="px-3 py-1.5 bg-secondary border border-border rounded-md text-sm font-medium text-foreground">
                     {s}
                   </span>
-                ))}
+                )) : (
+                  <span className="text-sm text-muted-foreground">No skills listed.</span>
+                )}
               </div>
             </div>
           </div>
 
-          <div className="bg-card border border-border rounded-3xl p-8 flex justify-between items-center">
+          <div className="bg-white border border-border rounded-2xl p-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
             <div>
-              <h3 className="font-serif text-xl text-foreground mb-1">Calibration</h3>
-              <p className="text-sm text-muted-foreground">Adjust how aggressively XSECT surfaces nearby signals.</p>
+              <h3 className="text-xl font-bold text-foreground mb-1">Calibration</h3>
+              <p className="text-sm text-muted-foreground">Adjust how aggressively XSECT surfaces your signal.</p>
             </div>
-            <button className="px-4 py-2 bg-white/5 rounded-xl text-sm font-medium hover:bg-white/10 transition-colors">
+            <button className="px-5 py-2.5 bg-secondary border border-border rounded-lg text-sm font-bold hover:bg-secondary/80 transition-colors whitespace-nowrap">
               Manage Tuning
             </button>
           </div>

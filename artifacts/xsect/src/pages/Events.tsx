@@ -1,60 +1,54 @@
-import { events } from '../lib/data';
-import { Calendar, MapPin, Users, ArrowRight } from 'lucide-react';
+import { Calendar as CalendarIcon, MapPin, Users } from 'lucide-react';
 import { useState } from 'react';
 
+const EVENTS_MOCK = [
+  { id: '1', title: 'Climate Tech Founder Mixer', date: 'Tomorrow, 6:00 PM', location: 'Downtown SF', attendees: 24, status: 'upcoming' },
+  { id: '2', title: 'Hard Tech Engineering Coffee', date: 'Friday, 8:00 AM', location: 'Mission District', attendees: 12, status: 'upcoming' },
+];
+
 export default function EventsPage() {
-  const [activeTab, setActiveTab] = useState<'upcoming'|'past'>('upcoming');
+  const [rsvp, setRsvp] = useState<string[]>([]);
+
+  const handleRsvp = (id: string) => {
+    if (rsvp.includes(id)) {
+      setRsvp(rsvp.filter(i => i !== id));
+    } else {
+      setRsvp([...rsvp, id]);
+    }
+  };
 
   return (
-    <div className="p-6 md:p-10 max-w-7xl mx-auto reveal">
-      <header className="mb-12 border-b border-border pb-8 flex justify-between items-end">
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
-            <span className="font-mono-custom text-xs uppercase tracking-widest text-primary">Gatherings</span>
-          </div>
-          <h1 className="font-serif text-4xl md:text-5xl text-foreground mb-4">Where paths converge.</h1>
-        </div>
-        <button className="px-6 py-3 bg-white/5 border border-border rounded-xl text-sm font-medium hover:bg-white/10 transition-colors">
-          Host an Event
-        </button>
+    <div className="p-6 md:p-10 max-w-5xl mx-auto h-full">
+      <header className="mb-10">
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-2">Events</h1>
+        <p className="text-muted-foreground text-sm max-w-lg">
+          High-density crossing points curated based on your orbit and intent.
+        </p>
       </header>
 
-      <div className="grid lg:grid-cols-2 gap-8 reveal-1">
-        {events.map(ev => (
-          <div key={ev.id} className="bg-card border border-border rounded-3xl overflow-hidden group hover:border-primary/30 transition-colors">
-            <div className="h-64 relative overflow-hidden">
-              <img src={ev.image} alt={ev.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-              <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent"></div>
-              <div className="absolute top-4 left-4 bg-background/80 backdrop-blur px-3 py-1.5 rounded border border-white/10 flex items-center gap-2 font-mono-custom text-[10px] uppercase">
-                <Calendar size={12} className="text-primary"/> {ev.date}
+      <div className="grid md:grid-cols-2 gap-6">
+        {EVENTS_MOCK.map((event) => (
+          <div key={event.id} className="bg-white border border-border rounded-2xl p-6 shadow-sm flex flex-col">
+            <h3 className="text-xl font-bold text-foreground mb-4">{event.title}</h3>
+            
+            <div className="space-y-3 mb-8 flex-1">
+              <div className="flex items-center gap-3 text-sm font-medium text-foreground">
+                <CalendarIcon size={16} className="text-primary" /> {event.date}
+              </div>
+              <div className="flex items-center gap-3 text-sm font-medium text-foreground">
+                <MapPin size={16} className="text-primary" /> {event.location}
+              </div>
+              <div className="flex items-center gap-3 text-sm font-medium text-foreground">
+                <Users size={16} className="text-primary" /> {event.attendees} high-signal attendees
               </div>
             </div>
             
-            <div className="p-8 relative -mt-10 z-10">
-              <h3 className="font-serif text-3xl text-foreground mb-4">{ev.title}</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed mb-6">{ev.description}</p>
-              
-              <div className="flex flex-col gap-3 mb-8 border-y border-white/5 py-4">
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2 text-muted-foreground"><MapPin size={16}/> {ev.location}</div>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2 text-muted-foreground"><Users size={16}/> {ev.attendees} Attending</div>
-                  <div className="font-mono-custom text-[10px] text-primary bg-primary/10 px-2 py-1 rounded">
-                    {ev.matchedAttendees} Signal Overlaps
-                  </div>
-                </div>
-                <div className="text-sm flex items-center gap-2">
-                  <span className="text-muted-foreground">Hosted by:</span>
-                  <span className="text-foreground">{ev.host}</span>
-                </div>
-              </div>
-              
-              <button className="w-full py-4 bg-foreground text-background rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-foreground/90 transition-colors">
-                {ev.rsvpStatus === 'waitlist' ? 'Join Waitlist' : 'Request Invite'} <ArrowRight size={16}/>
-              </button>
-            </div>
+            <button 
+              onClick={() => handleRsvp(event.id)}
+              className={`w-full py-3 rounded-lg text-sm font-bold transition-colors ${rsvp.includes(event.id) ? 'bg-secondary text-foreground border border-border' : 'bg-foreground text-background hover:bg-foreground/90'}`}
+            >
+              {rsvp.includes(event.id) ? 'RSVP Confirmed' : 'Request Invite'}
+            </button>
           </div>
         ))}
       </div>

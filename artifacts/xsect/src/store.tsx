@@ -10,38 +10,49 @@ export interface UserProfile {
 }
 
 export interface StoreState {
-  isLoggedIn: boolean;
   onboardingComplete: boolean;
   profile: UserProfile | null;
   savedOpportunities: string[];
   connectionsRequested: string[];
   connectionsAccepted: string[];
   unlockedIdentities: string[];
-  hasUpgraded: boolean;
+  
+  // Plans
+  plan: 'free' | 'pro' | 'pro_plus';
+  billingCycle: 'monthly' | 'annual';
+  
+  // Geolocation (in-memory)
+  locationTracking: 'idle' | 'tracking' | 'paused' | 'error';
+  locationAccuracy: number | null;
 }
 
 interface StoreContextType {
   state: StoreState;
-  login: () => void;
   completeOnboarding: (profile: UserProfile) => void;
-  logout: () => void;
   saveOpportunity: (id: string) => void;
   requestConnection: (id: string) => void;
   acceptConnection: (id: string) => void;
   unlockIdentity: (id: string) => void;
-  upgradeToPremium: () => void;
   updateProfile: (profile: Partial<UserProfile>) => void;
+  
+  // Plans
+  setPlan: (plan: 'free' | 'pro' | 'pro_plus', cycle?: 'monthly' | 'annual') => void;
+  
+  // Geolocation
+  setLocationTrackingStatus: (status: StoreState['locationTracking'], accuracy?: number | null) => void;
 }
 
 const initialState: StoreState = {
-  isLoggedIn: false,
   onboardingComplete: false,
   profile: null,
   savedOpportunities: [],
   connectionsRequested: [],
   connectionsAccepted: [],
   unlockedIdentities: [],
-  hasUpgraded: false,
+  plan: 'free',
+  billingCycle: 'monthly',
+  locationTracking: 'idle',
+  locationAccuracy: null
 };
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -49,11 +60,7 @@ const StoreContext = createContext<StoreContextType | undefined>(undefined);
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<StoreState>(initialState);
 
-  const login = () => setState(s => ({ ...s, isLoggedIn: true }));
-  
-  const completeOnboarding = (profile: UserProfile) => setState(s => ({ ...s, onboardingComplete: true, profile, isLoggedIn: true }));
-  
-  const logout = () => setState(initialState);
+  const completeOnboarding = (profile: UserProfile) => setState(s => ({ ...s, onboardingComplete: true, profile }));
   
   const saveOpportunity = (id: string) => setState(s => ({
     ...s, 
@@ -78,17 +85,28 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     unlockedIdentities: Array.from(new Set([...s.unlockedIdentities, id]))
   }));
   
-  const upgradeToPremium = () => setState(s => ({ ...s, hasUpgraded: true }));
-  
   const updateProfile = (profile: Partial<UserProfile>) => setState(s => ({
     ...s,
     profile: s.profile ? { ...s.profile, ...profile } : null
   }));
 
+  const setPlan = (plan: 'free' | 'pro' | 'pro_plus', cycle?: 'monthly' | 'annual') => setState(s => ({
+    ...s,
+    plan,
+    billingCycle: cycle || s.billingCycle
+  }));
+
+  const setLocationTrackingStatus = (status: StoreState['locationTracking'], accuracy?: number | null) => setState(s => ({
+    ...s,
+    locationTracking: status,
+    locationAccuracy: accuracy !== undefined ? accuracy : s.locationAccuracy
+  }));
+
   return (
     <StoreContext.Provider value={{
-      state, login, completeOnboarding, logout, saveOpportunity, 
-      requestConnection, acceptConnection, unlockIdentity, upgradeToPremium, updateProfile
+      state, completeOnboarding, saveOpportunity, 
+      requestConnection, acceptConnection, unlockIdentity, 
+      updateProfile, setPlan, setLocationTrackingStatus
     }}>
       {children}
     </StoreContext.Provider>
