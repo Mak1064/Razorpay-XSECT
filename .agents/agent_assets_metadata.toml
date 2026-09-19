@@ -14,3 +14,17 @@ mtime_ms = 1789817159982
 storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:964a3d8c-5755-4ab4-a01a-478e88ca4b8a/dfd8aebb-0da8-42b6-b37f-32cc4036abb8/5deb21d3-1c5f-478e-813c-7c27be049c3f"
 storage_version_token = "1789817168066049"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "g_k3XPMdd_OYOax62-okA"
+uri = "file://exports/xsect-no-payments-codebase.zip"
+type = "unspecified"
+title = "XSECT — No Payments Codebase"
+description = "Current verified XSECT source with all Stripe, billing, checkout, subscription, webhook, and payment code removed."
+logical_id = "a403039d-6f6b-437a-8958-7f232a9ac9e3"
+content_hash = "sha256:d04641bb2326e1b3945855ea04300affa6a4a4ee336d83cee150ebcacbecd20e"
+size = 4254345
+mtime_ms = 1789818641872
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:964a3d8c-5755-4ab4-a01a-478e88ca4b8a/a403039d-6f6b-437a-8958-7f232a9ac9e3/ea85d136-95f1-49c9-89fa-97f129af0611"
+storage_version_token = "1789818657713661"
+content_type = "application/octet-stream"
