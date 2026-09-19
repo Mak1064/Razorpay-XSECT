@@ -25,6 +25,7 @@ import MessagesPage from './pages/Messages';
 import Profile from './pages/Profile';
 import Plans from './pages/Plans';
 import NotFound from './pages/not-found';
+import { useProfile } from './hooks/use-profile';
 
 const queryClient = new QueryClient();
 
@@ -158,6 +159,7 @@ function AppRoutes() {
   const { state } = useStore();
   const { isLoaded, isSignedIn } = useUser();
   const [location] = useLocation();
+  const { data: serverProfile, isLoading: profileLoading } = useProfile(Boolean(isSignedIn));
 
   if (!isLoaded) {
     return (
@@ -166,13 +168,17 @@ function AppRoutes() {
       </div>
     );
   }
+  if (isSignedIn && profileLoading) {
+    return <div className="min-h-[100dvh] flex items-center justify-center bg-background"><div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div>;
+  }
+  const onboardingComplete = Boolean(serverProfile?.onboardingComplete || state.onboardingComplete);
 
   return (
     <Switch>
       <Route path="/" component={() => (
         <>
           <Show when="signed-in">
-            {!state.onboardingComplete ? <Redirect to="/onboarding" /> : <Redirect to="/radar" />}
+            {!onboardingComplete ? <Redirect to="/onboarding" /> : <Redirect to="/radar" />}
           </Show>
           <Show when="signed-out">
             <Landing />
@@ -189,7 +195,7 @@ function AppRoutes() {
           <Redirect to="/sign-in" />
         </Show>
         <Show when="signed-in">
-          {(!state.onboardingComplete && location !== '/onboarding') ? (
+          {(!onboardingComplete && location !== '/onboarding') ? (
             <Redirect to="/onboarding" />
           ) : (
             <Switch>

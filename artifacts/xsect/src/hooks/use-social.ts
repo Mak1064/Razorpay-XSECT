@@ -1,221 +1,38 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-
-const API_BASE = '/api/social';
-
-async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(url, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-    credentials: 'omit', // or 'include' based on how auth works in this app, usually Clerk handles it via headers, but let's use include if it uses cookies. Wait, standard clerk uses Authorization header or cookies if same domain. We will just use standard fetch which might get intercepted or handled by service worker, but 'include' is safe for same-origin cookies.
-  });
-  
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || res.statusText);
-  }
-  
-  // Return null for 204 No Content
-  if (res.status === 204) return null as any;
-  
-  return res.json();
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+const API_BASE='/api/social';
+export async function uploadPrivateFile(file: File, onProgress?: (value: number) => void) {
+  const allowed = ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'application/pdf', 'text/plain'];
+  if (!allowed.includes(file.type) || file.size > 10 * 1024 * 1024) throw new Error('Unsupported file type or size (10MB maximum).');
+  const request = await fetch('/api/storage/uploads/request-url', { method: 'POST', credentials: 'include', headers: {'Content-Type':'application/json'}, body: JSON.stringify({name:file.name,size:file.size,contentType:file.type}) });
+  if (!request.ok) throw new Error(await request.text());
+  const { uploadURL, objectPath } = await request.json() as { uploadURL: string; objectPath: string };
+  await new Promise<void>((resolve, reject) => { const xhr = new XMLHttpRequest(); xhr.open('PUT', uploadURL); xhr.setRequestHeader('Content-Type', file.type); xhr.upload.onprogress = e => { if(e.lengthComputable) onProgress?.(e.loaded/e.total); }; xhr.onload = () => xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error('Upload failed')); xhr.onerror = () => reject(new Error('Upload failed')); xhr.send(file); });
+  const complete = await fetch('/api/storage/uploads/finalize', { method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify({objectPath}) });
+  if (!complete.ok) throw new Error(await complete.text());
+  return { objectPath, contentType:file.type, size:file.size, name:file.name };
 }
+async function fetchJson<T>(url:string, options?:RequestInit):Promise<T>{ const r=await fetch(url,{...options,credentials:'include',headers:{'Content-Type':'application/json',...options?.headers}}); if(!r.ok) throw new Error((await r.text())||r.statusText); return r.status===204?null as T:await r.json(); }
+export interface SocialConnection { id:string; requesterId:string; recipientId:string; status:'pending'|'accepted'|'declined'|'withdrawn'|'blocked'; identity?:{userId:string}|null; }
+export function useConnections(){ return useQuery<{incoming:SocialConnection[];outgoing:SocialConnection[];accepted:SocialConnection[];all:SocialConnection[]}>({queryKey:['social','connections'],queryFn:()=>fetchJson(API_BASE+'/connections')}); }
+function action(path:string){const qc=useQueryClient(); return useMutation({mutationFn:(id:string)=>fetchJson(API_BASE+'/connections/'+id+'/'+path,{method:'POST'}),onSuccess:()=>qc.invalidateQueries({queryKey:['social','connections']})});}
+export const useAcceptConnection=()=>action('accept'); export const useDeclineConnection=()=>action('decline'); export const useWithdrawConnection=()=>action('withdraw'); export const useBlockConnection=()=>action('block');
+export function useRequestConnection(){const qc=useQueryClient();return useMutation({mutationFn:(targetUserId:string)=>fetchJson(API_BASE+'/connections/request',{method:'POST',body:JSON.stringify({targetUserId})}),onSuccess:()=>qc.invalidateQueries({queryKey:['social','connections']})});}
+export interface Conversation {id:string;participantA:string;participantB:string;createdAt:string;}
+export interface Message {id:string;conversationId:string;senderId:string;body:string;content?:string;status:string;readAt?:string|null;createdAt:string;attachment?:{url:string;contentType:string;size:number;name?:string};}
+export function useConversations(){return useQuery<{conversations:Conversation[]}>({queryKey:['social','conversations'],queryFn:()=>fetchJson(API_BASE+'/conversations')});}
+export function useConversationMessages(id?:string){return useQuery<{messages:Message[]}>({queryKey:['social','messages',id],queryFn:()=>fetchJson(API_BASE+'/conversations/'+id+'/messages'),enabled:!!id,refetchInterval:10000});}
+export function useSendMessage(){const qc=useQueryClient();return useMutation({mutationFn:({conversationId,body,attachment}:{conversationId:string;body:string;attachment?:unknown})=>fetchJson(API_BASE+'/conversations/'+conversationId+'/messages',{method:'POST',body:JSON.stringify({body,attachment})}),onSuccess:(_,v)=>{qc.invalidateQueries({queryKey:['social','messages',v.conversationId]});qc.invalidateQueries({queryKey:['social','conversations']});}});}
+export function useMarkConversationRead(){const qc=useQueryClient();return useMutation({mutationFn:(id:string)=>fetchJson(API_BASE+'/conversations/'+id+'/read',{method:'POST'}),onSuccess:()=>qc.invalidateQueries({queryKey:['social','conversations']})});}
+export function useRealtimeConversation(id:string|undefined,onMessage:(m:Message)=>void,onTyping?:(e:TypingEvent)=>void){ useEffect(()=>{ if(!id) return; const source=new EventSource(API_BASE+"/conversations/"+id+"/events"); const handler=(event:MessageEvent)=>{ try{onMessage(JSON.parse(event.data));}catch{} }; const typing=(event:MessageEvent)=>{try{onTyping?.(JSON.parse(event.data));}catch{}}; source.addEventListener("message",handler); source.addEventListener("typing",typing); return ()=>source.close(); },[id,onMessage,onTyping]); }
+export interface Notification {id:string;type:string;title:string;body:string;readAt?:string|null;resourceId?:string;createdAt:string;}
+export function useNotifications(){return useQuery<{notifications:Notification[]}>({queryKey:['social','notifications'],queryFn:()=>fetchJson(API_BASE+'/notifications'),refetchInterval:15000});}
+export function useMarkNotificationRead(){const qc=useQueryClient();return useMutation({mutationFn:(id:string)=>fetchJson(API_BASE+'/notifications/'+id+'/read',{method:'POST'}),onSuccess:()=>qc.invalidateQueries({queryKey:['social','notifications']})});}
+export function useMarkAllNotificationsRead(){const qc=useQueryClient();return useMutation({mutationFn:()=>fetchJson(API_BASE+'/notifications/read-all',{method:'POST'}),onSuccess:()=>qc.invalidateQueries({queryKey:['social','notifications']})});}
 
-// ---------------------------------------------------------
-// Connections
-// ---------------------------------------------------------
-
-export interface SocialConnection {
-  id: string;
-  userId: string;
-  name?: string; 
-  initials?: string; 
-  role: string;
-  intent: string;
-  status: 'incoming' | 'outgoing' | 'accepted' | 'blocked';
-}
-
-export function useConnections() {
-  return useQuery<SocialConnection[]>({
-    queryKey: ['social', 'connections'],
-    queryFn: () => fetchJson(`${API_BASE}/connections`),
-  });
-}
-
-export function useRequestConnection() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (userId: string) => fetchJson(`${API_BASE}/connections/${userId}/request`, { method: 'POST' }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['social', 'connections'] }),
-  });
-}
-
-export function useAcceptConnection() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => fetchJson(`${API_BASE}/connections/${id}/accept`, { method: 'POST' }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['social', 'connections'] }),
-  });
-}
-
-export function useDeclineConnection() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => fetchJson(`${API_BASE}/connections/${id}/decline`, { method: 'POST' }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['social', 'connections'] }),
-  });
-}
-
-export function useWithdrawConnection() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => fetchJson(`${API_BASE}/connections/${id}/withdraw`, { method: 'POST' }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['social', 'connections'] }),
-  });
-}
-
-export function useBlockConnection() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => fetchJson(`${API_BASE}/connections/${id}/block`, { method: 'POST' }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['social', 'connections'] }),
-  });
-}
-
-// ---------------------------------------------------------
-// Conversations & Messages
-// ---------------------------------------------------------
-
-export interface Conversation {
-  id: string;
-  participant: {
-    id: string;
-    name: string;
-    role: string;
-    initials: string;
-  };
-  lastMessage?: string;
-  unreadCount: number;
-  updatedAt: string;
-}
-
-export interface Message {
-  id: string;
-  conversationId: string;
-  senderId: string;
-  content: string;
-  createdAt: string;
-  isRead: boolean;
-}
-
-export function useConversations() {
-  return useQuery<Conversation[]>({
-    queryKey: ['social', 'conversations'],
-    queryFn: () => fetchJson(`${API_BASE}/conversations`),
-  });
-}
-
-export function useConversationMessages(conversationId?: string) {
-  return useQuery<Message[]>({
-    queryKey: ['social', 'conversations', conversationId, 'messages'],
-    queryFn: () => fetchJson(`${API_BASE}/conversations/${conversationId}/messages`),
-    enabled: !!conversationId,
-  });
-}
-
-export function useSendMessage() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ conversationId, content }: { conversationId: string; content: string }) => 
-      fetchJson(`${API_BASE}/conversations/${conversationId}/messages`, { 
-        method: 'POST',
-        body: JSON.stringify({ content })
-      }),
-    onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: ['social', 'conversations', variables.conversationId, 'messages'] });
-      qc.invalidateQueries({ queryKey: ['social', 'conversations'] });
-    },
-  });
-}
-
-export function useMarkConversationRead() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (conversationId: string) => fetchJson(`${API_BASE}/conversations/${conversationId}/read`, { method: 'POST' }),
-    onSuccess: (_, conversationId) => {
-      qc.invalidateQueries({ queryKey: ['social', 'conversations'] });
-    },
-  });
-}
-
-// ---------------------------------------------------------
-// Events
-// ---------------------------------------------------------
-
-export interface SocialEvent {
-  id: string;
-  title: string;
-  date: string;
-  location: string;
-  attendees: number;
-  status: 'upcoming' | 'past';
-  rsvpStatus: 'none' | 'requested' | 'confirmed' | 'waitlisted';
-}
-
-export function useEvents() {
-  return useQuery<SocialEvent[]>({
-    queryKey: ['social', 'events'],
-    queryFn: () => fetchJson(`${API_BASE}/events`),
-  });
-}
-
-export function useUpdateRsvp() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: SocialEvent['rsvpStatus'] }) => 
-      fetchJson(`${API_BASE}/events/${id}/rsvp`, {
-        method: 'POST',
-        body: JSON.stringify({ status })
-      }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['social', 'events'] }),
-  });
-}
-
-// ---------------------------------------------------------
-// Notifications
-// ---------------------------------------------------------
-
-export interface Notification {
-  id: string;
-  type: 'connection_request' | 'connection_accepted' | 'event_invite' | 'message';
-  title: string;
-  description: string;
-  isRead: boolean;
-  createdAt: string;
-  link?: string;
-}
-
-export function useNotifications() {
-  return useQuery<Notification[]>({
-    queryKey: ['social', 'notifications'],
-    queryFn: () => fetchJson(`${API_BASE}/notifications`),
-  });
-}
-
-export function useMarkNotificationRead() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => fetchJson(`${API_BASE}/notifications/${id}/read`, { method: 'POST' }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['social', 'notifications'] }),
-  });
-}
-
-export function useMarkAllNotificationsRead() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: () => fetchJson(`${API_BASE}/notifications/read-all`, { method: 'POST' }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['social', 'notifications'] }),
-  });
-}
+export function useReport(){ const qc=useQueryClient(); return useMutation({mutationFn:(v:{subjectId:string;connectionId?:string;reason:string;details?:string})=>fetchJson(API_BASE+'/reports',{method:'POST',body:JSON.stringify(v)}),onSuccess:()=>qc.invalidateQueries({queryKey:['social','connections']})}); }
+export function useReveal(){ const qc=useQueryClient(); return useMutation({mutationFn:(v:{connectionId:string;fields:string[];contextId?:string})=>fetchJson(API_BASE+'/connections/'+v.connectionId+'/reveal',{method:'POST',body:JSON.stringify({fields:v.fields,contextId:v.contextId})}),onSuccess:(_,v)=>qc.invalidateQueries({queryKey:['social','consent',v.connectionId]})}); }
+export function useConsentHistory(id?:string){return useQuery<{history:Array<{actorId:string;action:string;fields:string[]}>}>({queryKey:['social','consent',id],queryFn:()=>fetchJson(API_BASE+'/connections/'+id+'/consent'),enabled:!!id});}
+export function useIntroduction(){return useMutation({mutationFn:(v:{targetUserId:string;trustedOnly:boolean;contextId?:string})=>fetchJson(API_BASE+'/introductions',{method:'POST',body:JSON.stringify(v)})});}
+export interface TypingEvent {userId:string;typing:boolean;}
+export function useTyping(conversationId?:string){const [typing,setTyping]=useState(false); const last=useRef(0); const send=useCallback((value:boolean)=>{if(!conversationId||Date.now()-last.current<400)return; last.current=Date.now(); fetchJson(API_BASE+'/conversations/'+conversationId+'/typing',{method:'POST',body:JSON.stringify({typing:value})}).catch(()=>undefined); setTyping(value);},[conversationId]); useEffect(()=>{if(!typing)return; const t=setTimeout(()=>setTyping(false),2500); return()=>clearTimeout(t)},[typing]); return {typing,send};}

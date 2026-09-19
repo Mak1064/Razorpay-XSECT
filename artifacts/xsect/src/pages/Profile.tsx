@@ -1,186 +1,44 @@
-import { useStore } from '../store';
-import { useState } from 'react';
-import { ShieldCheck, Edit3, Check, Target, Lock, LogOut, CreditCard } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useEffect, useState } from 'react';
 import { useClerk, useUser } from '@clerk/react';
 import { useLocation } from 'wouter';
+import { Check, CreditCard, Edit3, Image as ImageIcon, LogOut, ShieldCheck } from 'lucide-react';
 import { useCreateBillingPortal } from '@workspace/api-client-react';
+import { useStore } from '../store';
+import { useProfile, type Profile } from '../hooks/use-profile';
+import { uploadPrivateFile } from '../hooks/use-social';
+import { useToast } from '@/hooks/use-toast';
 
-export default function Profile() {
-  const { state, updateProfile, setLocationTrackingStatus } = useStore();
-  const { toast } = useToast();
-  const { signOut } = useClerk();
-  const { user } = useUser();
-  const [, setLocation] = useLocation();
-  const [isEditing, setIsEditing] = useState(false);
-  const [editIntent, setEditIntent] = useState(state.profile?.intent || '');
-  const portal = useCreateBillingPortal();
+const csv = (v: string) => v.split(',').map(x => x.trim()).filter(Boolean);
+const join = (v: string[]) => v.join(', ');
+type Draft = Profile;
 
-  const handleSave = () => {
-    updateProfile({ intent: editIntent });
-    setIsEditing(false);
-    toast({ title: "Profile Updated", description: "Your signal has been recalibrated." });
-  };
-
-  const handleSignOut = async () => {
-    // Clear in-memory geolocation watch if any when signing out
-    setLocationTrackingStatus('idle', null);
-    await signOut();
-    setLocation('/');
-  };
-
-  const handleManageBilling = async () => {
-    try {
-      const result = await portal.mutateAsync();
-      window.location.assign(result.url);
-    } catch (error) {
-      toast({
-        title: 'Unable to open billing',
-        description: error instanceof Error ? error.message : 'Please try again.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const profileName = state.profile?.name || user?.fullName || 'Anonymous';
-  const initial = profileName.charAt(0);
-
-  return (
-    <div className="p-6 md:p-10 max-w-5xl mx-auto h-full">
-      <header className="mb-10 border-b border-border pb-8 flex flex-col md:flex-row justify-between md:items-end gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
-            <span className="font-mono-custom text-xs font-semibold uppercase tracking-widest text-primary">Your Signal</span>
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight">Make your intent legible.</h1>
-        </div>
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={() => isEditing ? handleSave() : setIsEditing(true)}
-            className="px-6 py-2.5 bg-white border border-border rounded-lg text-sm font-bold hover:bg-secondary transition-colors flex items-center gap-2 shadow-sm text-foreground"
-          >
-            {isEditing ? <><Check size={16}/> Save</> : <><Edit3 size={16}/> Edit Signal</>}
-          </button>
-          <button 
-            onClick={handleSignOut}
-            className="px-4 py-2.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
-          >
-            <LogOut size={16}/> Sign out
-          </button>
-        </div>
-      </header>
-
-      <div className="grid lg:grid-cols-[1fr_1.5fr] gap-8">
-        {/* Left Column: Identity Card */}
-        <div className="bg-white border border-border rounded-2xl p-8 h-fit shadow-sm">
-          <div className="flex items-center gap-4 mb-8 pb-8 border-b border-border">
-            <div className="w-20 h-20 rounded-full bg-secondary border border-border flex items-center justify-center text-foreground text-3xl font-bold">
-              {initial}
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-foreground mb-1">{profileName}</h2>
-              <p className="text-sm text-muted-foreground font-medium">{state.profile?.role || 'Unspecified Role'}</p>
-            </div>
-          </div>
-          
-          <div className="space-y-6">
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground font-medium">Privacy Mode</span>
-              <span className="flex items-center gap-1.5 text-primary font-mono-custom font-semibold uppercase text-[10px]"><ShieldCheck size={14}/> {state.profile?.privacyLevel || 'Balanced'}</span>
-            </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground font-medium">Account Email</span>
-              <span className="text-foreground">{user?.primaryEmailAddress?.emailAddress || 'hidden'}</span>
-            </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground font-medium">Current Plan</span>
-              <span className="font-mono-custom font-medium uppercase text-xs px-2 py-0.5 bg-secondary rounded">{state.plan}</span>
-            </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground font-medium">Billing Status</span>
-              <span className="font-medium capitalize">{state.billingStatus.replace('_', ' ')}</span>
-            </div>
-            {state.currentPeriodEnd && (
-              <div className="flex justify-between items-center gap-4 text-sm">
-                <span className="text-muted-foreground font-medium">
-                  {state.cancelAtPeriodEnd ? 'Access until' : 'Renews'}
-                </span>
-                <span className="text-foreground text-right">
-                  {new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(state.currentPeriodEnd))}
-                </span>
-              </div>
-            )}
-            {state.plan !== 'free' && (
-              <button
-                onClick={handleManageBilling}
-                disabled={portal.isPending}
-                className="w-full px-4 py-2.5 bg-foreground text-background rounded-lg text-sm font-bold hover:bg-foreground/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
-              >
-                <CreditCard size={16} />
-                {portal.isPending ? 'Opening Stripe…' : 'Manage subscription'}
-              </button>
-            )}
-            
-            <div className="bg-secondary/50 rounded-xl p-4 border border-border mt-8">
-              <div className="flex items-center gap-2 text-xs font-mono-custom font-semibold uppercase text-muted-foreground mb-2">
-                <Lock size={12}/> How you appear
-              </div>
-              <p className="text-[11px] text-muted-foreground leading-relaxed font-medium">
-                {state.profile?.privacyLevel === 'strict' && "Only intent and skills visible. Role and name hidden until accepted."}
-                {state.profile?.privacyLevel === 'balanced' && "Role category visible. Name hidden until accepted."}
-                {state.profile?.privacyLevel === 'open' && "Role and initial visible to nearby matches."}
-                {!state.profile?.privacyLevel && "Protected. Exact role, company, and name are hidden until you accept a request."}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: Intent & Skills */}
-        <div className="space-y-6">
-          <div className="bg-white border border-border rounded-2xl p-8 shadow-sm">
-            <div className="flex items-center gap-2 text-muted-foreground mb-6 font-mono-custom text-xs font-semibold uppercase tracking-widest">
-              <Target size={16} className="text-primary" /> Current Intent
-            </div>
-            
-            {isEditing ? (
-              <textarea 
-                value={editIntent}
-                onChange={e => setEditIntent(e.target.value)}
-                className="w-full bg-background border border-primary/50 rounded-xl p-4 text-foreground text-lg focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
-                rows={4}
-              />
-            ) : (
-              <h3 className="text-2xl md:text-3xl font-bold text-foreground leading-snug">
-                {state.profile?.intent || 'No intent set.'}
-              </h3>
-            )}
-            
-            <div className="mt-8 pt-8 border-t border-border">
-              <div className="text-xs text-muted-foreground font-mono-custom font-semibold uppercase tracking-widest mb-4">Core Competencies</div>
-              <div className="flex flex-wrap gap-2">
-                {state.profile?.skills?.length ? state.profile.skills.map(s => (
-                  <span key={s} className="px-3 py-1.5 bg-secondary border border-border rounded-md text-sm font-medium text-foreground">
-                    {s}
-                  </span>
-                )) : (
-                  <span className="text-sm text-muted-foreground">No skills listed.</span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white border border-border rounded-2xl p-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
-            <div>
-              <h3 className="text-xl font-bold text-foreground mb-1">Calibration</h3>
-              <p className="text-sm text-muted-foreground">Adjust how aggressively XSECT surfaces your signal.</p>
-            </div>
-            <button className="px-5 py-2.5 bg-secondary border border-border rounded-lg text-sm font-bold hover:bg-secondary/80 transition-colors whitespace-nowrap">
-              Manage Tuning
-            </button>
-          </div>
-        </div>
-      </div>
+export default function ProfilePage() {
+  const { state, setLocationTrackingStatus } = useStore();
+  const { user } = useUser(); const { signOut } = useClerk(); const [, setLocation] = useLocation();
+  const { data: profile, isLoading, isError, saveProfile, saving } = useProfile();
+  const { toast } = useToast(); const portal = useCreateBillingPortal();
+  const [editing, setEditing] = useState(false); const [photoUploading, setPhotoUploading] = useState(false); const [draft, setDraft] = useState<Draft | null>(null);
+  useEffect(() => { if (profile && !editing) setDraft(profile); }, [profile, editing]);
+  const update = (key: keyof Draft, value: Draft[keyof Draft]) => setDraft(d => d ? ({ ...d, [key]: value }) : d);
+  const save = async () => { if (!draft) return; try { await saveProfile(draft); setEditing(false); toast({ title: 'Profile updated', description: 'Your signal is synced across devices.' }); } catch (e) { toast({ title: 'Save failed', description: e instanceof Error ? e.message : 'Try again.', variant: 'destructive' }); } };
+  const signOutNow = async () => { setLocationTrackingStatus('idle', null); await signOut(); setLocation('/'); };
+  if (isLoading) return <div className="p-10 text-muted-foreground">Loading your signal…</div>;
+  if (isError || !draft) return <div className="p-10 text-destructive">We could not load your profile. Refresh to try again.</div>;
+  const input = (label: string, key: keyof Draft, placeholder = '') => <label className="block text-sm font-medium">{label}<input disabled={!editing} value={String(draft[key] ?? '')} onChange={e => update(key, e.target.value)} placeholder={placeholder} className="mt-1.5 w-full px-3 py-2 bg-background border border-border rounded-lg disabled:opacity-70" /></label>;
+  const arrayInput = (label: string, key: 'skills' | 'wants' | 'offers' | 'opportunityCategories') => <label className="block text-sm font-medium">{label}<input disabled={!editing} value={join(draft[key])} onChange={e => update(key, csv(e.target.value))} className="mt-1.5 w-full px-3 py-2 bg-background border border-border rounded-lg disabled:opacity-70" /><span className="text-xs text-muted-foreground">Comma-separated</span></label>;
+  const toggle = (label: string, value: boolean, onChange: (v: boolean) => void) => <label className="flex items-center gap-2 text-sm"><input type="checkbox" disabled={!editing} checked={value} onChange={e => onChange(e.target.checked)} />{label}</label>;
+  const jsonEditor = (label: string, key: 'experience' | 'links') => <label className="block text-sm font-medium">{label}<textarea disabled={!editing} value={JSON.stringify(draft[key], null, 2)} onChange={e => { try { update(key, JSON.parse(e.target.value)); } catch { /* keep the draft until valid JSON */ } }} rows={4} className="mt-1.5 w-full px-3 py-2 bg-background border border-border rounded-lg font-mono text-xs disabled:opacity-70" /></label>;
+  const name = draft.displayName || user?.fullName || 'Anonymous';
+  return <div className="p-6 md:p-10 max-w-6xl mx-auto">
+    <header className="mb-10 border-b border-border pb-8 flex flex-col md:flex-row justify-between md:items-end gap-4"><div><div className="flex items-center gap-2 mb-3"><span className="w-1.5 h-1.5 rounded-full bg-primary" /><span className="font-mono-custom text-xs font-semibold uppercase tracking-widest text-primary">Your Signal</span></div><h1 className="text-4xl md:text-5xl font-bold tracking-tight">Make your intent legible.</h1></div><div className="flex gap-3"><button onClick={() => editing ? save() : setEditing(true)} disabled={saving} className="px-6 py-2.5 bg-white border border-border rounded-lg text-sm font-bold flex items-center gap-2 shadow-sm">{editing ? <><Check size={16} />{saving ? 'Saving…' : 'Save'}</> : <><Edit3 size={16} />Edit Signal</>}</button><button onClick={signOutNow} className="px-4 py-2.5 text-muted-foreground rounded-lg text-sm font-medium flex items-center gap-2"><LogOut size={16} />Sign out</button></div></header>
+    <div className="grid lg:grid-cols-[1fr_1.6fr] gap-8">
+      <aside className="bg-white border border-border rounded-2xl p-8 h-fit shadow-sm"><div className="flex items-center gap-4 mb-8 pb-8 border-b border-border"><div className="w-20 h-20 rounded-full bg-secondary border border-border overflow-hidden flex items-center justify-center text-3xl font-bold">{draft.photoUrl ? <img src={draft.photoUrl?.startsWith('/objects/') ? '/api/storage'+draft.photoUrl : draft.photoUrl} alt="" className="w-full h-full object-cover" onError={e => { e.currentTarget.style.display = 'none'; }} /> : name[0]}</div><div><h2 className="text-2xl font-bold">{name}</h2><p className="text-sm text-muted-foreground">{draft.role || 'Unspecified role'}</p></div></div>{input('Photo URL (HTTPS)', 'photoUrl', 'https://…')}<label className="block text-sm font-medium mt-2">Private profile photo<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" disabled={!editing||photoUploading} onChange={async e=>{const file=e.target.files?.[0];if(!file||!draft)return;setPhotoUploading(true);try{const uploaded=await uploadPrivateFile(file);setDraft({...draft,photoUrl:uploaded.objectPath});}catch(err){toast({title:'Photo upload failed',description:err instanceof Error?err.message:'Unable to upload'});}finally{setPhotoUploading(false);}}} className="mt-1.5 w-full text-sm" />{photoUploading&&<span className="text-xs text-muted-foreground">Uploading…</span>}</label>{input('Company', 'company')}{input('Industry', 'industry')}<div className="space-y-3 mt-6 text-sm"><div className="flex justify-between"><span className="text-muted-foreground">Trust score</span><strong>{draft.trustReputation.score}</strong></div><div className="flex justify-between"><span className="text-muted-foreground">Connections completed</span><strong>{draft.trustReputation.completedConnections}</strong></div><div className="flex justify-between"><span className="text-muted-foreground">Endorsements</span><strong>{draft.trustReputation.endorsements}</strong></div></div><div className="mt-6 flex items-center gap-2 text-primary text-xs uppercase font-mono-custom"><ShieldCheck size={14} /> Server-backed privacy</div>{state.plan !== 'free' && <button onClick={async () => { const result = await portal.mutateAsync(); window.location.assign(result.url); }} className="mt-6 w-full py-2 bg-foreground text-background rounded-lg text-sm font-bold"><CreditCard size={15} className="inline mr-2" />Manage subscription</button>}</aside>
+      <main className="space-y-6">
+        <section className="bg-white border border-border rounded-2xl p-8 shadow-sm"><h2 className="text-xs uppercase tracking-widest text-muted-foreground font-mono-custom mb-5">Identity & intent</h2><div className="grid md:grid-cols-2 gap-4">{input('Display name', 'displayName')}{input('Role', 'role')}</div>{input('Current intent', 'intent')}<div className="grid md:grid-cols-2 gap-4 mt-4">{arrayInput('Skills', 'skills')}{arrayInput('Opportunity categories', 'opportunityCategories')}</div></section>
+        <section className="bg-white border border-border rounded-2xl p-8 shadow-sm"><h2 className="text-xs uppercase tracking-widest text-muted-foreground font-mono-custom mb-5">Exchange value</h2><div className="grid md:grid-cols-2 gap-4">{arrayInput('Wants', 'wants')}{arrayInput('Offers', 'offers')}</div><div className="mt-5 space-y-3"><h3 className="font-bold">Experience history</h3>{draft.experience.map((x, i) => <div key={i} className="p-3 border border-border rounded-lg text-sm"><strong>{x.title}</strong> · {x.company}<span className="block text-muted-foreground">{x.startYear || '—'} – {x.endYear || 'Present'}</span></div>)}{jsonEditor('Edit experience JSON', 'experience')}<h3 className="font-bold mt-5">Professional links</h3>{draft.links.map(x => <a key={x.url} href={x.url} target="_blank" rel="noreferrer" className="block text-sm text-primary">{x.label}: {x.url}</a>)}{jsonEditor('Edit links JSON', 'links')}</div></section>
+        <section className="bg-white border border-border rounded-2xl p-8 shadow-sm"><h2 className="text-xs uppercase tracking-widest text-muted-foreground font-mono-custom mb-5">Timing & discovery</h2><div className="grid md:grid-cols-3 gap-4"><label className="text-sm font-medium">Availability<select disabled={!editing} value={draft.availability} onChange={e => update('availability', e.target.value)} className="mt-1.5 w-full p-2 border rounded-lg"><option value="available_now">Available now</option><option value="within_month">Within a month</option><option value="not_available">Exploring</option></select></label><label className="text-sm font-medium">Urgency<select disabled={!editing} value={draft.urgency} onChange={e => update('urgency', e.target.value)} className="mt-1.5 w-full p-2 border rounded-lg"><option value="urgent">Urgent</option><option value="soon">Soon</option><option value="exploring">Exploring</option></select></label><label className="text-sm font-medium">Radius: {draft.discoveryRadius} miles<input disabled={!editing} type="range" min="1" max="500" value={draft.discoveryRadius} onChange={e => update('discoveryRadius', Number(e.target.value))} className="w-full mt-3" /></label></div><div className="grid md:grid-cols-2 gap-3 mt-6">{toggle('Email notifications', draft.notificationPreferences.email, v => update('notificationPreferences', { ...draft.notificationPreferences, email: v }))}{toggle('Push notifications', draft.notificationPreferences.push, v => update('notificationPreferences', { ...draft.notificationPreferences, push: v }))}{toggle('New matches', draft.notificationPreferences.matches, v => update('notificationPreferences', { ...draft.notificationPreferences, matches: v }))}{toggle('Messages', draft.notificationPreferences.messages, v => update('notificationPreferences', { ...draft.notificationPreferences, messages: v }))}</div></section>
+        <section className="bg-white border border-border rounded-2xl p-8 shadow-sm"><h2 className="text-xs uppercase tracking-widest text-muted-foreground font-mono-custom mb-5">Privacy controls</h2><div className="space-y-3">{toggle('Trusted-connections-only', draft.privacy.trustedConnectionsOnly, v => update('privacy', { ...draft.privacy, trustedConnectionsOnly: v }))}{toggle('Women-only opportunities', draft.privacy.womenOnly, v => update('privacy', { ...draft.privacy, womenOnly: v }))}{toggle('Stealth / ghost mode', draft.privacy.stealthMode, v => update('privacy', { ...draft.privacy, stealthMode: v }))}</div><div className="grid md:grid-cols-3 gap-4 mt-5"><label className="text-sm font-medium">Visible from<input disabled={!editing} type="time" value={draft.privacy.visibilitySchedule?.start || ''} onChange={e => update('privacy', { ...draft.privacy, visibilitySchedule: { start: e.target.value, end: draft.privacy.visibilitySchedule?.end || '' } })} className="mt-1.5 w-full p-2 border rounded-lg" /></label><label className="text-sm font-medium">Visible until<input disabled={!editing} type="time" value={draft.privacy.visibilitySchedule?.end || ''} onChange={e => update('privacy', { ...draft.privacy, visibilitySchedule: { start: draft.privacy.visibilitySchedule?.start || '', end: e.target.value } })} className="mt-1.5 w-full p-2 border rounded-lg" /></label><label className="text-sm font-medium">Timezone<input disabled={!editing} value={draft.privacy.visibilitySchedule?.timezone || ''} onChange={e => update('privacy', { ...draft.privacy, visibilitySchedule: { start: draft.privacy.visibilitySchedule?.start || '', end: draft.privacy.visibilitySchedule?.end || '', timezone: e.target.value } })} className="mt-1.5 w-full p-2 border rounded-lg" /></label></div><h3 className="font-bold mt-6 mb-3">Field visibility</h3><div className="grid md:grid-cols-2 gap-3">{['displayName', 'role', 'company', 'industry', 'skills', 'wants', 'offers', 'opportunityCategories'].map(field => toggle(field, draft.privacy.fieldVisibility[field] !== false, v => update('privacy', { ...draft.privacy, fieldVisibility: { ...draft.privacy.fieldVisibility, [field]: v } })) )}</div></section>
+      </main>
     </div>
-  );
+  </div>;
 }

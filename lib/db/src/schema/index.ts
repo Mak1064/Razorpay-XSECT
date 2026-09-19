@@ -19,3 +19,4 @@
 
 export * from "./billing-users";
 export * from "./social";
+export * from "./profiles";

@@ -3,20 +3,23 @@ import { Link } from 'wouter';
 import { useUser } from '@clerk/react';
 import { Check, MessageCircle, Search, ShieldCheck, UserRound, X, Ban } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useActivity } from '../lib/activity';
+import { useAcceptConnection, useBlockConnection, useConnections, useDeclineConnection, useWithdrawConnection, useReport, useReveal } from '../hooks/use-social';
 
 export default function NetworkPage() {
   const { user } = useUser();
   const { toast } = useToast();
-  const activity = useActivity(user?.id);
+  const { data, isLoading, isError } = useConnections();
+  const accept = useAcceptConnection(); const report = useReport(); const reveal = useReveal(); const decline = useDeclineConnection(); const block = useBlockConnection(); const withdraw = useWithdrawConnection();
   const [search, setSearch] = useState('');
-  const connections = activity.snapshot.connections.filter((connection) => connection.status !== 'declined' && connection.status !== 'blocked');
+  const connections = (data?.all ?? []).filter((connection) => connection.status !== 'declined' && connection.status !== 'blocked');
   const filtered = useMemo(() => connections.filter((connection) =>
-    `${connection.name} ${connection.role} ${connection.intent}`.toLowerCase().includes(search.toLowerCase()),
+    `${connection.requesterId} ${connection.recipientId}`.toLowerCase().includes(search.toLowerCase()),
   ), [connections, search]);
-  const incoming = filtered.filter((connection) => connection.status === 'incoming');
-  const outgoing = filtered.filter((connection) => connection.status === 'outgoing');
+  const incoming = filtered.filter((connection) => connection.recipientId === user?.id && connection.status === 'pending');
+  const outgoing = filtered.filter((connection) => connection.requesterId === user?.id && connection.status === 'pending');
   const accepted = filtered.filter((connection) => connection.status === 'accepted');
+  if (isLoading) return <div className="p-10">Loading your network…</div>;
+  if (isError) return <div className="p-10 text-destructive">Unable to load your network. Please try again.</div>;
 
   const notify = (title: string, description: string) => toast({ title, description });
 
@@ -61,15 +64,15 @@ export default function NetworkPage() {
                     </div>
                     <div>
                       <p className="text-xs uppercase tracking-wider font-mono-custom text-muted-foreground mb-1">Protected signal</p>
-                      <p className="font-bold text-foreground">{person.role}</p>
-                      <p className="text-sm text-muted-foreground mt-1">“{person.intent}”</p>
+                      <p className="font-bold text-foreground">{person.identity?.userId ?? (person.requesterId === user?.id ? person.recipientId : person.requesterId)}</p>
+                      <p className="text-sm text-muted-foreground mt-1">“Mutual consent is required before identity is revealed.”</p>
                     </div>
                   </div>
                   <div className="flex gap-2 md:shrink-0">
-                    <button onClick={() => { activity.declineConnection(person.id); notify('Request declined', 'The signal has been removed from your queue.'); }} className="px-3 py-2 text-sm font-bold text-muted-foreground hover:bg-secondary rounded-lg transition-colors flex items-center gap-1.5">
+                    <button onClick={() => { decline.mutate(person.id); notify('Request declined', 'The signal has been removed from your queue.'); }} className="px-3 py-2 text-sm font-bold text-muted-foreground hover:bg-secondary rounded-lg transition-colors flex items-center gap-1.5">
                       <X size={15} /> Decline
                     </button>
-                    <button onClick={() => { activity.acceptConnection(person.id); notify('Connection accepted', 'Identity is now revealed and messaging is available.'); }} className="px-4 py-2 bg-foreground text-background text-sm font-bold rounded-lg hover:bg-foreground/90 transition-colors flex items-center gap-1.5">
+                    <button onClick={() => { accept.mutate(person.id); notify('Connection accepted', 'Identity is now revealed and messaging is available.'); }} className="px-4 py-2 bg-foreground text-background text-sm font-bold rounded-lg hover:bg-foreground/90 transition-colors flex items-center gap-1.5">
                       <Check size={15} /> Accept & reveal
                     </button>
                   </div>
@@ -89,10 +92,10 @@ export default function NetworkPage() {
               {outgoing.map((person) => (
                 <div key={person.id} className="bg-white border border-border p-4 rounded-xl flex items-center justify-between gap-4">
                   <div>
-                    <p className="font-bold text-foreground">{person.role}</p>
+                    <p className="font-bold text-foreground">{person.identity?.userId ?? (person.requesterId === user?.id ? person.recipientId : person.requesterId)}</p>
                     <p className="text-sm text-muted-foreground">Request sent. Names remain hidden until accepted.</p>
                   </div>
-                  <button onClick={() => { activity.declineConnection(person.id); notify('Request withdrawn', 'You can send a new request later.'); }} className="text-sm font-semibold text-muted-foreground hover:text-foreground">Withdraw</button>
+                  <button onClick={() => { withdraw.mutate(person.id); notify('Request withdrawn', 'You can send a new request later.'); }} className="text-sm font-semibold text-muted-foreground hover:text-foreground">Withdraw</button>
                 </div>
               ))}
             </div>
@@ -112,18 +115,18 @@ export default function NetworkPage() {
                 <div key={person.id} className="bg-white border border-border p-5 rounded-xl shadow-sm">
                   <div className="flex items-center gap-4 mb-4">
                     <div className="w-12 h-12 bg-secondary border border-border rounded-full flex items-center justify-center font-bold text-lg text-foreground">
-                      {person.name.charAt(0)}
+                      {(person.identity?.userId ?? 'U').charAt(0)}
                     </div>
                     <div className="min-w-0">
-                      <h3 className="font-bold text-foreground truncate">{person.name}</h3>
-                      <p className="text-xs font-mono-custom text-muted-foreground truncate">{person.role}</p>
+                      <h3 className="font-bold text-foreground truncate">{person.identity?.userId ?? (person.requesterId === user?.id ? person.recipientId : person.requesterId)}</h3>
+                      <p className="text-xs font-mono-custom text-muted-foreground truncate">{person.identity?.userId ?? (person.requesterId === user?.id ? person.recipientId : person.requesterId)}</p>
                     </div>
                     <UserRound size={16} className="ml-auto text-emerald-600" />
                   </div>
-                  <p className="text-sm text-foreground font-medium bg-secondary p-3 rounded-lg line-clamp-2 mb-4">“{person.intent}”</p>
+                  <p className="text-sm text-foreground font-medium bg-secondary p-3 rounded-lg line-clamp-2 mb-4">Mutual consent is required before identity is revealed.</p><button onClick={() => reveal.mutate({connectionId:person.id,fields:['name','role','intent']},{onSuccess:()=>notify('Reveal recorded','Selected profile fields are now shared.')})} className="text-xs font-semibold text-primary mb-4">Reveal name, role & intent</button>
                   <div className="flex items-center justify-between">
-                    <button onClick={() => { activity.blockConnection(person.id); notify('Connection blocked', 'This person can no longer message or request a reveal.'); }} className="text-xs font-semibold text-muted-foreground hover:text-destructive flex items-center gap-1">
-                      <Ban size={13} /> Block
+                    <button onClick={() => { const reason=window.prompt('Why are you blocking this person?'); if(!reason?.trim()) return; report.mutate({subjectId: person.identity?.userId ?? (person.requesterId === user?.id ? person.recipientId : person.requesterId),connectionId:person.id,reason:reason.trim()},{onSuccess:()=>notify('Reported and blocked','Moderation has recorded your report.')}); }} className="text-xs font-semibold text-muted-foreground hover:text-destructive flex items-center gap-1">
+                      <Ban size={13} /> Report & block
                     </button>
                     <Link href={`/messages?thread=${person.id}`} className="text-sm font-bold text-primary hover:text-primary/80 flex items-center gap-1.5">
                       <MessageCircle size={15} /> Message

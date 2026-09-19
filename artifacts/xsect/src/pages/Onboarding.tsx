@@ -1,210 +1,49 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
-import { useStore } from '../store';
 import { useUser } from '@clerk/react';
-import { Shield, Target, User as UserIcon } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { profileQueryKey } from '../hooks/use-profile';
+
+type Form = {
+  displayName: string; role: string; intent: string; company: string; industry: string; skills: string;
+  wants: string; offers: string; opportunityCategories: string; availability: 'available_now' | 'within_month' | 'not_available';
+  urgency: 'urgent' | 'soon' | 'exploring'; discoveryRadius: number; email: boolean; push: boolean;
+  matches: boolean; messages: boolean; trustedConnectionsOnly: boolean; womenOnly: boolean; stealthMode: boolean;
+};
+const initial: Form = { displayName: '', role: '', intent: '', company: '', industry: '', skills: '', wants: '', offers: '', opportunityCategories: '', availability: 'not_available', urgency: 'exploring', discoveryRadius: 25, email: true, push: true, matches: true, messages: true, trustedConnectionsOnly: false, womenOnly: false, stealthMode: false };
+const split = (value: string) => value.split(',').map(s => s.trim()).filter(Boolean);
 
 export default function Onboarding() {
   const [, setLocation] = useLocation();
-  const { completeOnboarding } = useStore();
   const { user } = useUser();
+  const queryClient = useQueryClient();
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState<{
-    name: string;
-    role: string;
-    intent: string;
-    skills: string;
-    privacyLevel: 'strict' | 'balanced' | 'open';
-  }>({
-    name: user?.fullName || '',
-    role: '',
-    intent: '',
-    skills: '',
-    privacyLevel: 'balanced',
-  });
-
-  const handleComplete = () => {
-    completeOnboarding({
-      name: formData.name || 'Anonymous',
-      role: formData.role,
-      intent: formData.intent,
-      skills: formData.skills.split(',').map(s => s.trim()).filter(Boolean),
-      location: 'Determining...',
-      privacyLevel: formData.privacyLevel
-    });
-    setLocation('/radar');
+  const [form, setForm] = useState<Form>({ ...initial, displayName: user?.fullName || '' });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  useEffect(() => { fetch('/api/profile').then(r => r.ok ? r.json() : null).then(data => { if (data?.profile) { const p = data.profile; setForm(f => ({ ...f, displayName: p.displayName, role: p.role, intent: p.intent || '', company: p.company || '', industry: p.industry || '', skills: (p.skills || []).join(', '), wants: (p.wants || []).join(', '), offers: (p.offers || []).join(', '), opportunityCategories: (p.opportunityCategories || []).join(', '), availability: p.availability, urgency: p.urgency, discoveryRadius: p.discoveryRadius, ...p.notificationPreferences, ...p.privacy })); } }).catch(() => setError('Could not load your saved signal.')).finally(() => setLoading(false)); }, []);
+  const update = <K extends keyof Form>(key: K, value: Form[K]) => setForm(f => ({ ...f, [key]: value }));
+  const complete = async () => {
+    setSaving(true); setError('');
+    const body = { ...form, skills: split(form.skills), wants: split(form.wants), offers: split(form.offers), opportunityCategories: split(form.opportunityCategories), notificationPreferences: { email: form.email, push: form.push, matches: form.matches, messages: form.messages }, privacy: { trustedConnectionsOnly: form.trustedConnectionsOnly, womenOnly: form.womenOnly, stealthMode: form.stealthMode, fieldVisibility: {} }, onboardingComplete: true };
+    try { const response = await fetch('/api/onboarding/complete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); if (!response.ok) throw new Error((await response.json()).error || 'Unable to save onboarding.'); const result = await response.json(); queryClient.setQueryData(profileQueryKey, result.profile); setLocation('/radar'); } catch (e) { setError(e instanceof Error ? e.message : 'Unable to save onboarding.'); } finally { setSaving(false); }
   };
-
-  return (
-    <div className="min-h-[100dvh] flex flex-col bg-background selection:bg-primary/20">
-      <header className="px-6 py-6 border-b border-border">
-        <div className="flex items-center gap-3">
-          <img src="/logo.svg" alt="XSECT" className="w-6 h-6" />
-          <span className="font-bold tracking-tight">XSECT</span>
-        </div>
-      </header>
-
-      <main className="flex-1 flex items-center justify-center p-6">
-        <div className="w-full max-w-md bg-white border border-border rounded-xl shadow-sm p-8">
-          <div className="mb-8">
-            <div className="flex gap-2 mb-4">
-              {[1, 2, 3].map(i => (
-                <div key={i} className={`h-1 flex-1 rounded-full ${step >= i ? 'bg-primary' : 'bg-secondary'}`} />
-              ))}
-            </div>
-            <h1 className="text-2xl font-bold mb-2">
-              {step === 1 && "Establish your baseline."}
-              {step === 2 && "Declare your intent."}
-              {step === 3 && "Set your exposure."}
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              {step === 1 && "This information forms the core of your signal."}
-              {step === 2 && "What are you actively looking for right now?"}
-              {step === 3 && "Control how much of your identity is visible on radar."}
-            </p>
-          </div>
-
-          {step === 1 && (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1.5">Display Name</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  placeholder="Jane Doe"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1.5">Primary Role</label>
-                <input
-                  type="text"
-                  value={formData.role}
-                  onChange={e => setFormData({ ...formData, role: e.target.value })}
-                  className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  placeholder="e.g. Senior Staff Engineer"
-                />
-              </div>
-              <button 
-                onClick={() => setStep(2)}
-                disabled={!formData.name || !formData.role}
-                className="w-full bg-foreground text-background py-2.5 rounded-md font-medium disabled:opacity-50 mt-6"
-              >
-                Continue
-              </button>
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1.5">Current Intent</label>
-                <textarea
-                  value={formData.intent}
-                  onChange={e => setFormData({ ...formData, intent: e.target.value })}
-                  className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none h-24"
-                  placeholder="Looking for a founding engineer role in climate tech..."
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1.5">Core Skills (comma separated)</label>
-                <input
-                  type="text"
-                  value={formData.skills}
-                  onChange={e => setFormData({ ...formData, skills: e.target.value })}
-                  className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  placeholder="React, Distributed Systems, Go"
-                />
-              </div>
-              <div className="flex gap-3 mt-6">
-                <button 
-                  onClick={() => setStep(1)}
-                  className="px-4 py-2.5 bg-secondary text-secondary-foreground rounded-md font-medium"
-                >
-                  Back
-                </button>
-                <button 
-                  onClick={() => setStep(3)}
-                  disabled={!formData.intent}
-                  className="flex-1 bg-foreground text-background py-2.5 rounded-md font-medium disabled:opacity-50"
-                >
-                  Continue
-                </button>
-              </div>
-            </div>
-          )}
-
-          {step === 3 && (
-            <div className="space-y-4">
-              <div className="space-y-3">
-                <label 
-                  className={`flex gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${formData.privacyLevel === 'strict' ? 'border-primary bg-primary/5' : 'border-border hover:bg-secondary/50'}`}
-                >
-                  <input 
-                    type="radio" 
-                    name="privacy" 
-                    checked={formData.privacyLevel === 'strict'}
-                    onChange={() => setFormData({ ...formData, privacyLevel: 'strict' })}
-                    className="mt-1 accent-primary"
-                  />
-                  <div>
-                    <div className="font-medium flex items-center gap-2"><Shield size={16} /> Strict</div>
-                    <div className="text-sm text-muted-foreground mt-1">Only intent and skills visible. Role and name hidden until accepted.</div>
-                  </div>
-                </label>
-                
-                <label 
-                  className={`flex gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${formData.privacyLevel === 'balanced' ? 'border-primary bg-primary/5' : 'border-border hover:bg-secondary/50'}`}
-                >
-                  <input 
-                    type="radio" 
-                    name="privacy" 
-                    checked={formData.privacyLevel === 'balanced'}
-                    onChange={() => setFormData({ ...formData, privacyLevel: 'balanced' })}
-                    className="mt-1 accent-primary"
-                  />
-                  <div>
-                    <div className="font-medium flex items-center gap-2"><Target size={16} /> Balanced</div>
-                    <div className="text-sm text-muted-foreground mt-1">Role category visible. Name hidden until accepted.</div>
-                  </div>
-                </label>
-
-                <label 
-                  className={`flex gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${formData.privacyLevel === 'open' ? 'border-primary bg-primary/5' : 'border-border hover:bg-secondary/50'}`}
-                >
-                  <input 
-                    type="radio" 
-                    name="privacy" 
-                    checked={formData.privacyLevel === 'open'}
-                    onChange={() => setFormData({ ...formData, privacyLevel: 'open' })}
-                    className="mt-1 accent-primary"
-                  />
-                  <div>
-                    <div className="font-medium flex items-center gap-2"><UserIcon size={16} /> Open</div>
-                    <div className="text-sm text-muted-foreground mt-1">Role and initial visible to nearby matches.</div>
-                  </div>
-                </label>
-              </div>
-
-              <div className="flex gap-3 mt-6">
-                <button 
-                  onClick={() => setStep(2)}
-                  className="px-4 py-2.5 bg-secondary text-secondary-foreground rounded-md font-medium"
-                >
-                  Back
-                </button>
-                <button 
-                  onClick={handleComplete}
-                  className="flex-1 bg-primary text-primary-foreground py-2.5 rounded-md font-medium hover:bg-primary/90 transition-colors"
-                >
-                  Initialize Signal
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </main>
+  const input = (key: keyof Form, label: string, placeholder = '') => <label className="block text-sm font-medium">{label}<input value={String(form[key])} onChange={e => update(key, e.target.value as never)} placeholder={placeholder} className="mt-1.5 w-full px-3 py-2 bg-background border border-border rounded-md" /></label>;
+  if (loading) return <div className="min-h-screen grid place-items-center text-muted-foreground">Loading your saved signal…</div>;
+  return <div className="min-h-[100dvh] flex flex-col bg-background"><header className="px-6 py-6 border-b border-border font-bold">XSECT</header><main className="flex-1 flex items-center justify-center p-6"><div className="w-full max-w-lg bg-white border border-border rounded-xl shadow-sm p-8">
+    <div className="flex gap-2 mb-6">{[1, 2, 3, 4, 5, 6, 7].map(i => <div key={i} className={`h-1 flex-1 rounded-full ${step >= i ? 'bg-primary' : 'bg-secondary'}`} />)}</div>
+    <h1 className="text-2xl font-bold mb-2">{['Your direction.', 'The basics.', 'Your context.', 'Exchange value.', 'Your timing.', 'Your reach.', 'Your boundaries.'][step - 1]}</h1>
+    <p className="text-sm text-muted-foreground mb-6">Step {step} of 7 · You can update this anytime from your profile.</p>
+    <div className="space-y-4">
+      {step === 1 && <>{input('opportunityCategories', 'Opportunity categories', 'Hiring, partnership, mentorship')}<p className="text-xs text-muted-foreground">Separate multiple categories with commas.</p></>}
+      {step === 2 && <>{input('displayName', 'Display name', 'Jane Doe')}{input('role', 'Current role', 'Founder, designer, engineer')}</>}
+      {step === 3 && <>{input('company', 'Company', 'Company or independent')}{input('industry', 'Industry', 'Climate, healthcare, technology')}{input('intent', 'Current intent', 'What are you looking for?')}</>}
+      {step === 4 && <>{input('skills', 'Skills', 'React, strategy, operations')} {input('wants', 'Wants', 'Co-founder, advice, introductions')} {input('offers', 'Offers', 'Engineering, mentoring, capital')}</>}
+      {step === 5 && <><label className="block text-sm font-medium">Availability<select value={form.availability} onChange={e => update('availability', e.target.value as Form['availability'])} className="mt-1.5 w-full px-3 py-2 border border-border rounded-md"><option value="available_now">Available now</option><option value="within_month">Within a month</option><option value="not_available">Just exploring</option></select></label><label className="block text-sm font-medium">Urgency<select value={form.urgency} onChange={e => update('urgency', e.target.value as Form['urgency'])} className="mt-1.5 w-full px-3 py-2 border border-border rounded-md"><option value="urgent">Urgent</option><option value="soon">Soon</option><option value="exploring">Exploring</option></select></label></>}
+      {step === 6 && <><label className="block text-sm font-medium">Discovery radius: {form.discoveryRadius} miles<input type="range" min="1" max="500" value={form.discoveryRadius} onChange={e => update('discoveryRadius', Number(e.target.value))} className="w-full mt-3" /></label>{(['email', 'push', 'matches', 'messages'] as const).map(k => <label key={k} className="flex gap-2 text-sm"><input type="checkbox" checked={form[k]} onChange={e => update(k, e.target.checked)} /> {k === 'matches' ? 'New relevant matches' : `Notify by ${k}`}</label>)}</>}
+      {step === 7 && <>{(['trustedConnectionsOnly', 'womenOnly', 'stealthMode'] as const).map(k => <label key={k} className="flex gap-2 text-sm"><input type="checkbox" checked={form[k]} onChange={e => update(k, e.target.checked)} /> {k === 'trustedConnectionsOnly' ? 'Trusted connections only' : k === 'womenOnly' ? 'Women-only opportunities (opt in)' : 'Stealth / ghost mode'}</label>)}<p className="text-xs text-muted-foreground">Review complete. Your privacy choices are saved on the server and apply across devices.</p></>}
     </div>
-  );
+    {error && <p className="mt-4 text-sm text-destructive">{error}</p>}<div className="flex gap-3 mt-8">{step > 1 && <button onClick={() => setStep(step - 1)} className="px-4 py-2.5 bg-secondary rounded-md">Back</button>}{step < 7 ? <button onClick={() => setStep(step + 1)} disabled={step === 2 && !form.displayName} className="flex-1 bg-foreground text-background py-2.5 rounded-md disabled:opacity-50">Continue</button> : <button onClick={complete} disabled={saving} className="flex-1 bg-primary text-primary-foreground py-2.5 rounded-md disabled:opacity-50">{saving ? 'Saving…' : 'Save and enter XSECT'}</button>}</div>
+  </div></main></div>;
 }
