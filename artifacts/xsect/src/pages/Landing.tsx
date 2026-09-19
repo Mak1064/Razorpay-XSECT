@@ -32,25 +32,21 @@ export default function Landing() {
             <img
               src={publicAsset('/images/city-1.jpg')}
               alt=""
-              className="h-full w-full object-cover object-center opacity-75 saturate-[0.9] contrast-[1.05]"
+              className="h-full w-full object-cover object-center saturate-[0.95] contrast-[1.08]"
             />
           </div>
-          <div
-            className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.93)_0%,rgba(255,255,255,0.78)_52%,rgba(255,255,255,0.48)_100%)] lg:bg-[linear-gradient(90deg,rgba(255,255,255,0.97)_0%,rgba(255,255,255,0.92)_40%,rgba(255,255,255,0.24)_73%,rgba(255,255,255,0.38)_100%)]"
-            aria-hidden="true"
-          />
           <div className="px-6 md:px-12 py-20 md:py-32 max-w-[1400px] mx-auto w-full flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
-          <div className="flex-1 w-full max-w-2xl reveal">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary border border-border mb-8 shadow-sm" data-testid="badge-network-type">
+          <div className="flex-1 w-full max-w-2xl reveal bg-[#0b1018]/90 backdrop-blur-md border border-white/15 rounded-3xl p-7 md:p-10 lg:p-12 shadow-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 mb-8" data-testid="badge-network-type">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-              <span className="text-xs font-mono-custom font-bold uppercase tracking-widest text-foreground">Private Network</span>
+              <span className="text-xs font-mono-custom font-bold uppercase tracking-widest text-white">Private Network</span>
             </div>
             
-            <h1 className="text-5xl md:text-7xl lg:text-[5rem] font-bold tracking-tight text-foreground mb-6 leading-[1.05]" data-testid="text-hero-title">
+            <h1 className="text-5xl md:text-7xl lg:text-[5rem] font-bold tracking-tight text-white mb-6 leading-[1.05]" data-testid="text-hero-title">
               Intersect with intent.
             </h1>
             
-            <p className="text-xl text-muted-foreground mb-10 leading-relaxed max-w-xl font-medium" data-testid="text-hero-subtitle">
+            <p className="text-xl text-white/75 mb-10 leading-relaxed max-w-xl font-medium" data-testid="text-hero-subtitle">
               A high-signal routing layer for ambitious professionals. We match capability, timing, and geographic proximity without exposing your identity until mutual consent is established.
             </p>
             
@@ -58,15 +54,15 @@ export default function Landing() {
               <Link href="/sign-up" data-testid="link-create-signal" className="inline-flex justify-center items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-md font-bold text-lg hover:bg-primary/90 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
                 Join the Network <ArrowRight size={18} />
               </Link>
-              <Link href="/sign-in" data-testid="link-explore-network" className="inline-flex justify-center items-center gap-2 bg-secondary text-foreground px-8 py-4 rounded-md font-bold text-lg hover:bg-secondary/80 transition-all border border-border hover:-translate-y-0.5 shadow-sm">
+              <Link href="/sign-in" data-testid="link-explore-network" className="inline-flex justify-center items-center gap-2 bg-white/10 text-white px-8 py-4 rounded-md font-bold text-lg hover:bg-white/15 transition-all border border-white/20 hover:-translate-y-0.5">
                 Enter Network
               </Link>
             </div>
             
-            <div className="mt-12 flex items-center gap-4 text-sm font-mono-custom text-muted-foreground">
+            <div className="mt-12 flex items-center gap-4 text-sm font-mono-custom text-white/65">
               <div className="flex -space-x-2">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className={`w-8 h-8 rounded-full border-2 border-background bg-secondary flex items-center justify-center font-bold text-[10px] text-foreground z-[${4-i}]`}>
+                  <div key={i} className={`w-8 h-8 rounded-full border-2 border-[#0b1018] bg-white/15 flex items-center justify-center font-bold text-[10px] text-white z-[${4-i}]`}>
                     0{i}
                   </div>
                 ))}
